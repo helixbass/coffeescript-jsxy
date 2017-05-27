@@ -390,6 +390,29 @@ test 'all together now', ->
   '''
   eq toJS(input), output
 
+test 'indented = expression following outdent', ->
+  input = '''
+    .table-responsive.small
+      %thead
+        %tr
+      = %Appt{ appt, key: appt.id } for appt in data.appts
+  '''
+  output = '''
+    var FORCE_EXPRESSION, appt;
+
+    <div className='table-responsive small'><thead><tr></tr></thead> {FORCE_EXPRESSION = (function() {
+      var i, len, ref, results;
+      ref = data.appts;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        appt = ref[i];
+        results.push(<Appt appt={appt} key={appt.id}></Appt>);
+      }
+      return results;
+    })()}</div>;
+  '''
+  eq toJS(input), output
+
 # TODO:
 # error tests:
 # - no whitespace before element body

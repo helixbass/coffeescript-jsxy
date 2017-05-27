@@ -427,7 +427,7 @@ exports.Lexer = class Lexer
         {numOutdents, consumed} = @lineToken(returnNumOutdents: yes, noNewlines: not topLevel)
         @consumeChunk consumed
         return popLevels: numOutdents - 1
-      followsNewline = @lineToken(dry: yes)
+      followsNewline = @lineToken(dry: yes) or popLevels?
 
   matchJsxInlineBody: ({elementName, consumedWhitespace}) ->
     match = JSX_ELEMENT_INLINE_EQUALS_EXPRESSION.exec(@chunk)
