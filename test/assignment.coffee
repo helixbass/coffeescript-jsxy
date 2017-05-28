@@ -436,7 +436,7 @@ test "#1348, #1216: existential assignment compilation", ->
   a = nonce
   b = (a ?= 0)
   eq nonce, b
-  #the first ?= compiles into a statement; the second ?= compiles to a ternary expression
+  # the first ?= compiles into a statement; the second ?= compiles to a ternary expression
   eq a ?= b ?= 1, nonce
 
   if a then a ?= 2 else a = 3
@@ -451,7 +451,7 @@ test "#1643: splatted accesses in destructuring assignments should not be declar
   nonce = {}
   accesses = ['o.a', 'o["a"]', '(o.a)', '(o.a).a', '@o.a', 'C::a', 'C::', 'f().a', 'o?.a', 'o?.a.b', 'f?().a']
   for access in accesses
-    for i,j in [1,2,3] #position can matter
+    for i,j in [1,2,3] # position can matter
       code =
         """
         nonce = {}; nonce2 = {}; nonce3 = {};

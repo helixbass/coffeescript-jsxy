@@ -413,6 +413,15 @@ test 'indented = expression following outdent', ->
   '''
   eq toJS(input), output
 
+test 'outer leading #', ->
+  input = '''
+    #abc
+      #def.ghi.jkl
+  '''
+  output = '''<div id='abc'><div id='def' className='ghi jkl'></div></div>;'''
+  eq toJS(input), output
+
+
 # TODO:
 # error tests:
 # - no whitespace before element body

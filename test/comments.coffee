@@ -57,7 +57,7 @@ test "comments in functions", ->
 
   ok fn()
 
-  fn2 = -> #comment
+  fn2 = -> # comment
     fn()
     # comment
 
@@ -74,11 +74,11 @@ test "trailing comment before an outdent", ->
 
 test "comments in a switch", ->
   nonce = {}
-  result = switch nonce #comment
+  result = switch nonce # comment
     # comment
     when false then undefined
     # comment
-    when null #comment
+    when null # comment
       undefined
     else nonce # comment
 
@@ -88,7 +88,7 @@ test "comment with conditional statements", ->
   nonce = {}
   result = if false # comment
     undefined
-  #comment
+  # comment
   else # comment
     nonce
     # comment

@@ -70,8 +70,8 @@ test "`?.` and `::` should continue lines", ->
     ::
     ?.foo
   )
-  #eq Object::toString, Date?.
-  #prototype
+  # eq Object::toString, Date?.
+  # prototype
   #::
   #?.foo
 

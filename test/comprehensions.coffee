@@ -421,16 +421,16 @@ test "#1326: `by` value is uncached", ->
   forCompile = []
   rangeCompileSimple = []
 
-  #exercises For.compile
+  # exercises For.compile
   for v, i in a by f()
     forCompile.push i
 
-  #exercises Range.compileSimple
+  # exercises Range.compileSimple
   rangeCompileSimple = (i for i in [0..2] by g())
 
   arrayEq a, forCompile
   arrayEq a, rangeCompileSimple
-  #exercises Range.compile
+  # exercises Range.compile
   eq "#{i for i in [0..2] by h()}", '0,1,2'
 
 test "#1669: break/continue should skip the result only for that branch", ->

@@ -121,7 +121,7 @@ test "duplicate formal parameters are prohibited", ->
 
 test "`delete` operand restrictions", ->
   strict 'a = 1; delete a'
-  strictOk 'delete a' #noop
+  strictOk 'delete a' # noop
   strict '(a) -> delete a'
   strict '(a...) -> delete a'
   strict '(a = 1) -> delete a'

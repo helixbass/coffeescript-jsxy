@@ -23,7 +23,7 @@ class MockOutputStream extends Stream
     @written = []
 
   write: (data) ->
-    #console.log 'output write', arguments
+    # console.log 'output write', arguments
     @written.push data
 
   lastWrite: (fromEnd = -1) ->
@@ -54,7 +54,7 @@ testRepl "writes eval to output", (input, output) ->
   eq '2', output.lastWrite()
 
 testRepl "comments are ignored", (input, output) ->
-  input.emitLine '1 + 1 #foo'
+  input.emitLine '1 + 1 # foo'
   eq '2', output.lastWrite()
 
 testRepl "output in inspect mode", (input, output) ->
