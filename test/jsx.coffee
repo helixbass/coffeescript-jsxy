@@ -421,6 +421,18 @@ test 'outer leading #', ->
   output = '''<div id='abc'><div id='def' className='ghi jkl'></div></div>;'''
   eq toJS(input), output
 
+test 'leading dot class after if', ->
+  input = '''
+    %div
+      = if a
+        .small
+  '''
+  output = '''
+	var FORCE_EXPRESSION;
+
+	<div>{FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}</div>;
+  '''
+  eq toJS(input), output
 
 # TODO:
 # error tests:

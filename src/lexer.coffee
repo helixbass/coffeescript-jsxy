@@ -749,7 +749,6 @@ exports.Lexer = class Lexer
     @seenExport = no unless @exportSpecifierList
 
     size = indent.length - 1 - indent.lastIndexOf '\n'
-    noNewlines ?= @unfinished()
 
     action =
       switch
@@ -762,6 +761,8 @@ exports.Lexer = class Lexer
         else
            'outdent'
     return action if dry
+
+    noNewlines ?= @unfinished()
 
     switch action
       when 'consumedIndebt'
@@ -1164,7 +1165,18 @@ exports.Lexer = class Lexer
   jsxLeadingDotClassAllowed: ->
     return yes unless @tokens.length
     return yes if @lastNonIndentTag() in CANT_PRECEDE_DOT_PROPERTY
+    return yes if @lineToken(dry: yes) is 'indent' and @prevLineStartsWith ['IF', 'ELSE', 'FOR', 'UNLESS']
+    [..., prevToken] = @tokens
+    return yes if prevToken?[0]        is 'INDENT' and @prevLineStartsWith ['IF', 'ELSE', 'FOR', 'UNLESS'], offset: 1
     no
+
+  prevLineStartsWith: (tags, opts = {}) ->
+    {offset = 0} = opts
+    index = @tokens.length - offset
+    while tag = @tokens[--index]?[0]
+      break if tag in ['TERMINATOR', 'INDENT', 'OUTDENT']
+    lineStarter = @tokens[index + 1]
+    lineStarter?[0] in tags
 
   lastNonIndentTag: ->
     index = @tokens.length
