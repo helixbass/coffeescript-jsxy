@@ -885,8 +885,21 @@ exports.JsxElement = class JsxElement extends Base
       [@makeCode " id='#{@shorthands.id}'"]
 
     compiledClassAttribute = do =>
-      return [] unless @shorthands.classes.length
-      [@makeCode " className='#{@shorthands.classes.join ' '}'"]
+      {classes} = @shorthands
+      return [] unless classes.length
+      if classes.isArgList
+        [
+          @makeCode " className='"
+          (
+            new Call(
+              new Value new IdentifierLiteral('classNames')
+              classes
+            ).compileToFragments o
+          )...
+          @makeCode "'"
+        ]
+      else
+        [@makeCode " className='#{@shorthands.classes.join ' '}'"]
 
     compiledListAttributes = do =>
       return [] unless @attributes.list.length

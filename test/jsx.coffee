@@ -454,6 +454,17 @@ test 'leading dot class after blank line', ->
   '''
   eq toJS(input), output
 
+test 'leading interpreted dot class', ->
+  input = '''
+    .( 'small', 'text-danger': not mobile_confirm )
+  '''
+  output = '''
+	<div className='classNames('small', {
+	  'text-danger': !mobile_confirm
+	})'></div>;
+  '''
+  eq toJS(input), output
+
 # TODO:
 # error tests:
 # - no whitespace before element body
