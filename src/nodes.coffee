@@ -875,7 +875,6 @@ exports.JsxElement = class JsxElement extends Base
 
   constructor: (options) ->
     {@name, children: @children_ = [], @attributes = {}, @shorthands = {}} = options
-    @attributes.object ?= {}
     @attributes.list   ?= []
     @shorthands.classes ?= []
 
@@ -887,19 +886,22 @@ exports.JsxElement = class JsxElement extends Base
     compiledClassAttribute = do =>
       {classes} = @shorthands
       return [] unless classes.length
-      if classes.isArgList
-        [
-          @makeCode " className='"
-          (
-            new Call(
-              new Value new IdentifierLiteral('classNames')
-              classes
-            ).compileToFragments o
-          )...
-          @makeCode "'"
-        ]
-      else
-        [@makeCode " className='#{@shorthands.classes.join ' '}'"]
+      return [@makeCode " className='#{@shorthands.classes.join ' '}'"] unless classes.isArgList
+
+      @attributes.object ?= new JsxAttributesObj
+      @attributes.object.properties.push(
+        new Assign(
+          new Value new IdentifierLiteral('className')
+          new Call(
+            new Value new IdentifierLiteral('classNames')
+            classes
+          )
+          'object'
+          new Literal ':'
+        )
+      )
+
+      []
 
     compiledListAttributes = do =>
       return [] unless @attributes.list.length

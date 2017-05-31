@@ -457,11 +457,17 @@ test 'leading dot class after blank line', ->
 test 'leading interpreted dot class', ->
   input = '''
     .( 'small', 'text-danger': not mobile_confirm )
+
+    .( 'small', 'text-danger': not mobile_confirm ){ other: attr }
   '''
   output = '''
-	<div className='classNames('small', {
+	<div className={classNames('small', {
 	  'text-danger': !mobile_confirm
-	})'></div>;
+	})}></div>;
+
+	<div other={attr} className={classNames('small', {
+	  'text-danger': !mobile_confirm
+	})}></div>;
   '''
   eq toJS(input), output
 
