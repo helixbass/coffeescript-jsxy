@@ -434,6 +434,26 @@ test 'leading dot class after if', ->
   '''
   eq toJS(input), output
 
+test 'leading dot class after blank line', ->
+  input = '''
+    {a} = b
+
+    .small
+
+    {c} = d
+    .big
+  '''
+  output = '''
+	var a, c;
+
+	a = b.a;
+
+	<div className='small'></div>;
+
+	c = d.big.c;
+  '''
+  eq toJS(input), output
+
 # TODO:
 # error tests:
 # - no whitespace before element body

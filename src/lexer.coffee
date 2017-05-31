@@ -749,6 +749,7 @@ exports.Lexer = class Lexer
     @seenExport = no unless @exportSpecifierList
 
     size = indent.length - 1 - indent.lastIndexOf '\n'
+    includesBlankLine = indent.split('\n').length > 2
 
     action =
       switch
@@ -762,11 +763,11 @@ exports.Lexer = class Lexer
            'outdent'
     return action if dry
 
-    noNewlines ?= @unfinished()
+    noNewlines ?= @unfinished({includesBlankLine})
 
     switch action
       when 'consumedIndebt'
-        if noNewlines then @suppressNewlines() else @newlineToken 0
+        if noNewlines then @suppressNewlines() else @newlineToken 0, {includesBlankLine}
       when 'indent'
         if noNewlines or @tag() is 'RETURN'
           @indebt = size - @indent
@@ -776,7 +777,9 @@ exports.Lexer = class Lexer
           @baseIndent = @indent = size
           break
         diff = size - @indent + @outdebt
-        @token 'INDENT', diff, indent.length - size, size
+        token = @makeToken 'INDENT', diff, indent.length - size, size
+        token.includesBlankLine = yes if includesBlankLine
+        @tokens.push token
         @indents.push diff
         @ends.push {tag: 'OUTDENT'}
         @outdebt = @indebt = 0
@@ -833,9 +836,11 @@ exports.Lexer = class Lexer
     if match then match[0].length else 0
 
   # Generate a newline token. Consecutive newlines get merged together.
-  newlineToken: (offset) ->
+  newlineToken: (offset, opts = {}) ->
     @tokens.pop() while @value() is ';'
-    @token 'TERMINATOR', '\n', offset, 0 unless @tag() is 'TERMINATOR'
+    token = @makeToken 'TERMINATOR', '\n', offset, 0 unless @tag() is 'TERMINATOR'
+    token.includesBlankLine = yes if opts.includesBlankLine
+    @tokens.push token
     this
 
   # Use a `\` at a line-ending to suppress the newline.
@@ -1151,9 +1156,9 @@ exports.Lexer = class Lexer
     token?[1]
 
   # Are we in the midst of an unfinished expression?
-  unfinished: ->
+  unfinished: (opts = {}) ->
     regex =
-      if @jsxLeadingDotClassAllowed()
+      if @jsxLeadingDotClassAllowed(opts)
         LINE_CONTINUER_NO_DOT
       else
         LINE_CONTINUER
@@ -1162,12 +1167,14 @@ exports.Lexer = class Lexer
                '**', 'SHIFT', 'RELATION', 'COMPARE', '&', '^', '|', '&&', '||',
                'BIN?', 'THROW', 'EXTENDS', 'DEFAULT']
 
-  jsxLeadingDotClassAllowed: ->
+  jsxLeadingDotClassAllowed: ({includesBlankLine} = {}) ->
     return yes unless @tokens.length
+    return yes if includesBlankLine
     return yes if @lastNonIndentTag() in CANT_PRECEDE_DOT_PROPERTY
     return yes if @lineToken(dry: yes) is 'indent' and @prevLineStartsWith ['IF', 'ELSE', 'FOR', 'UNLESS']
     [..., prevToken] = @tokens
     return yes if prevToken?[0]        is 'INDENT' and @prevLineStartsWith ['IF', 'ELSE', 'FOR', 'UNLESS'], offset: 1
+    return yes if prevToken?.includesBlankLine
     no
 
   prevLineStartsWith: (tags, opts = {}) ->
