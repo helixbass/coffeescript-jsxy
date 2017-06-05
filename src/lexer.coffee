@@ -597,11 +597,24 @@ exports.Lexer = class Lexer
 
   offsetOfNextOutdent: (greaterThan = no) =>
     match =
-      ///
-        \n
-        #{' '} {0, #{if greaterThan then @indent - 1 else @indent}}
-        \S
-      ///.exec @chunk
+      (if greaterThan
+        ///
+          \n
+          #{' '} {0, #{@indent - 1}}
+          \S
+        ///
+      else
+        ///
+          \n
+          (?:
+            #{' '} {0, #{@indent - 1}}
+            \S
+              |
+            #{' '} {0, #{@indent}}
+            [^\]\}\)\s] # TODO: make this smarter?
+          )
+        ///
+      ).exec @chunk
     return @chunk.length unless match # no outdent remaining
 
     match.index

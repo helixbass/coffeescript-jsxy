@@ -428,9 +428,9 @@ test 'leading dot class after if', ->
         .small
   '''
   output = '''
-	var FORCE_EXPRESSION;
+    var FORCE_EXPRESSION;
 
-	<div>{FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}</div>;
+    <div>{FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}</div>;
   '''
   eq toJS(input), output
 
@@ -444,13 +444,13 @@ test 'leading dot class after blank line', ->
     .big
   '''
   output = '''
-	var a, c;
+    var a, c;
 
-	a = b.a;
+    a = b.a;
 
-	<div className='small'></div>;
+    <div className='small'></div>;
 
-	c = d.big.c;
+    c = d.big.c;
   '''
   eq toJS(input), output
 
@@ -461,13 +461,42 @@ test 'leading interpreted dot class', ->
     .( 'small', 'text-danger': not mobile_confirm ){ other: attr }
   '''
   output = '''
-	<div className={classNames('small', {
-	  'text-danger': !mobile_confirm
-	})}></div>;
+    <div className={classNames('small', {
+      'text-danger': !mobile_confirm
+    })}></div>;
 
-	<div other={attr} className={classNames('small', {
-	  'text-danger': !mobile_confirm
-	})}></div>;
+    <div other={attr} className={classNames('small', {
+      'text-danger': !mobile_confirm
+    })}></div>;
+  '''
+  eq toJS(input), output
+
+test 'allow closer at same indent', ->
+  input = '''
+    %h1
+      = a(
+        if b
+          1
+        else
+          2
+      )
+    %h2
+      = a
+      b
+    %h3
+      = a [
+        b
+      ]
+      c
+  '''
+  output = '''
+    var FORCE_EXPRESSION;
+
+    <h1>{FORCE_EXPRESSION = a(b ? 1 : 2)}</h1>;
+
+    <h2>{a} b</h2>;
+
+    <h3>{a([b])} c</h3>;
   '''
   eq toJS(input), output
 

@@ -25,3 +25,6 @@
 - allow/parse inline tag after content? eg
   %h1
     hello<span class={@abc}>World</span>
+- allow combination of interpreted/literal classNames? eg %h1.abc.( xyz: def ) => <h1 className={classNames('abc', {xyz: def})}
+- allow haml-style self-closing tag syntax? eg %hr/
+- support angular-style text filter syntax inside {} and/or = expressions? eg = amount | currency
