@@ -488,6 +488,13 @@ test 'allow closer at same indent', ->
         b
       ]
       c
+    %h4
+      = a
+      )
+    %h5
+      = a {
+        b, c
+      }
   '''
   output = '''
     var FORCE_EXPRESSION;
@@ -497,6 +504,13 @@ test 'allow closer at same indent', ->
     <h2>{a} b</h2>;
 
     <h3>{a([b])} c</h3>;
+
+    <h4>{a} )</h4>;
+
+    <h5>{a({
+      b: b,
+      c: c
+    })}</h5>;
   '''
   eq toJS(input), output
 

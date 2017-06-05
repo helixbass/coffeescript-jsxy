@@ -79,6 +79,7 @@ exports.Lexer = class Lexer
       return {@tokens, index: i} if opts.untilBalanced and @ends.length is 0
 
     @closeIndentation()
+    return @ends.pop() if opts.returnUnclosed
     @error "missing #{end.tag}", end.origin[2] if end = @ends.pop()
     return @tokens if opts.rewrite is off
     (new Rewriter).rewrite @tokens
@@ -596,6 +597,14 @@ exports.Lexer = class Lexer
     @matchJsxElementIndentedContentLine(opts)
 
   offsetOfNextOutdent: (greaterThan = no) =>
+    unless greaterThan
+      offsetOfNextNewline = do =>
+        return unless match = /// ^ ([^\n]*) \n ///.exec @chunk
+        [full, nonNewlines] = match
+        nonNewlines.length
+      if offsetOfNextNewline
+        [line, column] = @getLineAndColumnFromChunk 0
+        unclosed = new Lexer().tokenize @chunk[...offsetOfNextNewline], {line, column, returnUnclosed: yes}
     match =
       (if greaterThan
         ///
@@ -603,7 +612,7 @@ exports.Lexer = class Lexer
           #{' '} {0, #{@indent - 1}}
           \S
         ///
-      else
+      else if unclosed
         ///
           \n
           (?:
@@ -611,8 +620,14 @@ exports.Lexer = class Lexer
             \S
               |
             #{' '} {0, #{@indent}}
-            [^\]\}\)\s] # TODO: make this smarter?
+            [^#{ '\\' + unclosed.tag }\s]
           )
+        ///
+      else
+        ///
+          \n
+          #{' '} {0, #{@indent}}
+          \S
         ///
       ).exec @chunk
     return @chunk.length unless match # no outdent remaining
