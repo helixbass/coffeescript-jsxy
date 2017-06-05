@@ -79,7 +79,6 @@ exports.Lexer = class Lexer
       return {@tokens, index: i} if opts.untilBalanced and @ends.length is 0
 
     @closeIndentation()
-    return @ends.pop() if opts.returnUnclosed
     @error "missing #{end.tag}", end.origin[2] if end = @ends.pop()
     return @tokens if opts.rewrite is off
     (new Rewriter).rewrite @tokens
@@ -604,7 +603,11 @@ exports.Lexer = class Lexer
         nonNewlines.length
       if offsetOfNextNewline
         [line, column] = @getLineAndColumnFromChunk 0
-        unclosed = new Lexer().tokenize @chunk[...offsetOfNextNewline], {line, column, returnUnclosed: yes}
+        try
+          new Lexer().tokenize @chunk[...offsetOfNextNewline], {line, column}
+        catch error
+          throw error unless match = /^missing (\S+)/.exec error.message
+          [full, unclosed] = match
     match =
       (if greaterThan
         ///
@@ -620,7 +623,7 @@ exports.Lexer = class Lexer
             \S
               |
             #{' '} {0, #{@indent}}
-            [^#{ '\\' + unclosed.tag }\s]
+            [^#{ '\\' + unclosed }\s]
           )
         ///
       else
