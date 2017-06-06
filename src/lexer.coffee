@@ -885,9 +885,10 @@ exports.Lexer = class Lexer
   # Generate a newline token. Consecutive newlines get merged together.
   newlineToken: (offset, opts = {}) ->
     @tokens.pop() while @value() is ';'
-    token = @makeToken 'TERMINATOR', '\n', offset, 0 unless @tag() is 'TERMINATOR'
-    token.includesBlankLine = yes if opts.includesBlankLine
-    @tokens.push token
+    unless @tag() is 'TERMINATOR'
+      token = @makeToken 'TERMINATOR', '\n', offset, 0
+      token.includesBlankLine = yes if opts.includesBlankLine
+      @tokens.push token
     this
 
   # Use a `\` at a line-ending to suppress the newline.
