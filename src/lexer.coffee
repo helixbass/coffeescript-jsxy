@@ -826,7 +826,6 @@ exports.Lexer = class Lexer
     return action if dry
 
     noNewlines ?= @unfinished({includesBlankLine})
-    # console.log {noNewlines, @chunk}
 
     newIndentLiteral = if size > 0 then indent[-size..] else ''
     unless /^(.?)\1*$/.exec newIndentLiteral
@@ -836,10 +835,6 @@ exports.Lexer = class Lexer
     minLiteralLength = Math.min newIndentLiteral.length, @indentLiteral.length
     if newIndentLiteral[...minLiteralLength] isnt @indentLiteral[...minLiteralLength]
       @error 'indentation mismatch', offset: indent.length
-      return indent.length
-
-    if size - @indebt is @indent
-      if noNewlines then @suppressNewlines() else @newlineToken 0
       return indent.length
 
     switch action

@@ -1342,7 +1342,7 @@ test "ES6 prototypes can be overriden", ->
   # This shouldn't throw,
   # as we only change inheritance not object construction
   # This may be an issue with ES, rather than CS construction?
-  #eq b.test(), 'B'
+  # eq b.test(), 'B'
 
   class D extends B
   B::test = () -> 'D'

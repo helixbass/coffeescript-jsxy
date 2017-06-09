@@ -476,11 +476,11 @@ test 'leading dot class after blank line', ->
     '''
     var a, c;
 
-    a = b.a;
+    ({a} = b);
 
     <div className='small'></div>;
 
-    c = d.big.c;
+    ({c} = d.big);
     '''
   )
 
