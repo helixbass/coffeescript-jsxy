@@ -826,6 +826,7 @@ exports.Lexer = class Lexer
     return action if dry
 
     noNewlines ?= @unfinished({includesBlankLine})
+    # console.log {noNewlines, @chunk}
 
     newIndentLiteral = if size > 0 then indent[-size..] else ''
     unless /^(.?)\1*$/.exec newIndentLiteral
@@ -1266,7 +1267,6 @@ exports.Lexer = class Lexer
                'BIN?', 'THROW', 'EXTENDS', 'DEFAULT']
 
   jsxLeadingDotClassAllowed: ({includesBlankLine} = {}) ->
-    console.log {includesBlankLine, @chunk, @tokens}
     return yes unless @tokens.length
     return yes if includesBlankLine
     return yes if @lastNonIndentTag() in CANT_PRECEDE_DOT_PROPERTY
