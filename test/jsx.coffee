@@ -3,95 +3,109 @@
 
 test 'simple inline element', ->
   # element = %h1 Hello, world!
-  input = '%h1 Hello, world!'
-  output = '<h1>Hello, world!</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1 Hello, world!'
+    '<h1>Hello, world!</h1>;'
+  )
 
 test 'simple indented element', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       Hello, world!
     '''
-  output = '<h1>Hello, world!</h1>;'
-  eq toJS(input), output
+    '<h1>Hello, world!</h1>;'
+  )
 
 test 'simple nested element', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       %a
         Hello, world!
     '''
-  output = '<h1><a>Hello, world!</a></h1>;'
-  eq toJS(input), output
+    '<h1><a>Hello, world!</a></h1>;'
+  )
 
 test 'inline element, no body', ->
-  input = '%h1'
-  output = '<h1></h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1'
+    '<h1></h1>;'
+  )
 
 test 'inline element with parenthesized attributes', ->
-  input = '''%h1( a="b" c='def' g={h + i})'''
-  output = '''<h1 a="b" c='def' g={h + i}></h1>;'''
-  eq toJS(input), output
+  eqJS(
+    '''%h1( a="b" c='def' g={h + i})'''
+    '''<h1 a="b" c='def' g={h + i}></h1>;'''
+  )
 
 test 'inline element with parenthesized attributes and content', ->
-  input = '''%h1( a="b" c='def' g={h + i}) jkl'''
-  output = '''<h1 a="b" c='def' g={h + i}>jkl</h1>;'''
-  eq toJS(input), output
+  eqJS(
+    '''%h1( a="b" c='def' g={h + i}) jkl'''
+    '''<h1 a="b" c='def' g={h + i}>jkl</h1>;'''
+  )
 
 test 'inline =expressionBody', ->
-  input = '%h1= name'
-  output = '<h1>{name}</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1= name'
+    '<h1>{name}</h1>;'
+  )
 
 test 'expression inline content', ->
-  input = '%h1 {@abc}'
-  output = '<h1>{this.abc}</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1 {@abc}'
+    '<h1>{this.abc}</h1>;'
+  )
 
 test 'mixed inline content', ->
-  input = '%h1 name {@abc}'
-  output = '<h1>name {this.abc}</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1 name {@abc}'
+    '<h1>name {this.abc}</h1>;'
+  )
 
 test 'mixed inline content normalize whitespace', ->
-  input = '%h1 name  {@abc}'
-  output = '<h1>name {this.abc}</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1 name  {@abc}'
+    '<h1>name {this.abc}</h1>;'
+  )
 
 test 'mixed inline content normalize trailing whitespace', ->
-  input = '%h1 name  {@abc} '
-  output = '<h1>name {this.abc}</h1>;'
-  eq toJS(input), output
+  eqJS(
+    '%h1 name  {@abc} '
+    '<h1>name {this.abc}</h1>;'
+  )
 
 test 'indented equals expression', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       = abc
-  '''
-  output = '<h1>{abc}</h1>;'
-  eq toJS(input), output
+    '''
+    '<h1>{abc}</h1>;'
+  )
 
 test 'no equals expression unless line-starting', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       x = abc
       y= abc
       {z}= abc
       {w} = abc
       =abc
-  '''
+    '''
   # output = '<h1>x = abc y= abc {z}= abc {w} = abc {abc}</h1>;' TODO: once whitespace (or lack thereof) between children is fixed use this one
-  output = '<h1>x = abc y= abc {z} = abc {w} = abc {abc}</h1>;'
-  eq toJS(input), output
+    '<h1>x = abc y= abc {z} = abc {w} = abc {abc}</h1>;'
+  )
 
 test 'equals for loop', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       = for x in ['a', 'b', 'c']
         %b= x
-  '''
-  output = '''
+    '''
+    '''
     var FORCE_EXPRESSION, x;
 
     <h1>{FORCE_EXPRESSION = (function() {
@@ -104,11 +118,12 @@ test 'equals for loop', ->
       }
       return results;
     })()}</h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'various indented expressions', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       {@x} {@y}
       abc
@@ -123,26 +138,29 @@ test 'various indented expressions', ->
       }
       {
         @m }
-  '''
-  output = '<h1>{this.x} {this.y} abc {this.z} def {this.g + h} {this.i + this.j} {this.k} {this.l} {this.m}</h1>;'
-  eq toJS(input), output
+    '''
+    '<h1>{this.x} {this.y} abc {this.z} def {this.g + h} {this.i + this.j} {this.k} {this.l} {this.m}</h1>;'
+  )
 
 test 'simple object attributes', ->
-  input = '''
+  eqJS(
+    '''
     %h1{ a: b }
-  '''
-  output = '<h1 a={b}></h1>;'
-  eq toJS(input), output
+    '''
+    '<h1 a={b}></h1>;'
+  )
 
 test 'value object attributes', ->
-  input = '''
+  eqJS(
+    '''
     %h1{ a, @b, c: d() }
-  '''
-  output = '<h1 a={a} b={this.b} c={d()}></h1>;'
-  eq toJS(input), output
+    '''
+    '<h1 a={a} b={this.b} c={d()}></h1>;'
+  )
 
 test 'multi-line object attributes', ->
-  input = '''
+  eqJS(
+    '''
     x = ->
       %h1{
         a
@@ -150,8 +168,8 @@ test 'multi-line object attributes', ->
         c: d()
       }
     y
-  '''
-  output = '''
+    '''
+    '''
     var x;
 
     x = function() {
@@ -159,40 +177,43 @@ test 'multi-line object attributes', ->
     };
 
     y;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'parenthesized and object attributes', ->
-  input = '''
+  eqJS(
+    '''
     %h1{ a, @b, c: d() }( e = 'f' )
     %h2(e={f}){a,@b,c:d()}
-  '''
-  output = '''
+    '''
+    '''
     <h1 e='f' a={a} b={this.b} c={d()}></h1>;
 
     <h2 e={f} a={a} b={this.b} c={d()}></h2>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'simple tag', ->
-  input = '''
+  eqJS(
+    '''
     <h1></h1>
-  '''
-  output = '''
+    '''
+    '''
     <h1></h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'self-closing tags', ->
-  input = '''
+  eqJS(
+    '''
     <h1/>
     <h2 />
     <h3 a='b' c={d}/>
     <h4
         e='f g'
     />
-  '''
-  output = '''
+    '''
+    '''
     <h1></h1>;
 
     <h2></h2>;
@@ -200,34 +221,37 @@ test 'self-closing tags', ->
     <h3 a='b' c={d}></h3>;
 
     <h4 e='f g'></h4>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'tag with attributes and indented body', ->
-  input = '''
+  eqJS(
+    '''
     <h1 a="b" c={@d}>
       <b>
         Hey
         = @name
       </b>
     </h1>
-  '''
-  output = '''
+    '''
+    '''
     <h1 a="b" c={this.d}><b>Hey {this.name}</b></h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'nested inline tags', ->
-  input = '''
+  eqJS(
+    '''
     <h1   a="b" c = {@d} ><b > Hey {@name}</b></h1>
-  '''
-  output = '''
+    '''
+    '''
     <h1 a="b" c={this.d}><b>Hey {this.name}</b></h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'element enders', ->
-  input = '''
+  eqJS(
+    '''
     x %h1, 2
     %h2 {
       if a
@@ -241,8 +265,8 @@ test 'element enders', ->
       %b if c
     x = ->
       %b unless c
-  '''
-  output = '''
+    '''
+    '''
     var FORCE_EXPRESSION, x, y, z;
 
     x(<h1></h1>, 2);
@@ -270,19 +294,21 @@ test 'element enders', ->
         return <b></b>;
       }
     };
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'shorthand tags', ->
-  input = '''
+  eqJS(
+    '''
     %h1#abc
       #def.ghi.jkl
-  '''
-  output = '''<h1 id='abc'><div id='def' className='ghi jkl'></div></h1>;'''
-  eq toJS(input), output
+    '''
+    '''<h1 id='abc'><div id='def' className='ghi jkl'></div></h1>;'''
+  )
 
 test 'multiline attributes', ->
-  input = '''
+  eqJS(
+    '''
     %h1(
       a={b}
       c='d' )
@@ -294,14 +320,15 @@ test 'multiline attributes', ->
         %b( n = 'o' 
           p='q'
         )
-  '''
-  output = '''
+    '''
+    '''
     <h1 a={b} c='d'><a e={f(g)} h='i'><b j='k' l='m'></b> <b n='o' p='q'></b></a></h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'multiline attributes in tags', ->
-  input = '''
+  eqJS(
+    '''
     <h1
       a={b}
       c='d'>
@@ -314,14 +341,15 @@ test 'multiline attributes in tags', ->
           p='q'
         ></b>
       </a></h1>
-  '''
-  output = '''
+    '''
+    '''
     <h1 a={b} c='d'><a e={f(g)} h='i'><b j='k' l='m'></b> <b n='o' p='q'></b></a></h1>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'leading-dot classname', ->
-  input = '''
+  eqJS(
+    '''
     SplitPane = ({left, right}) ->
       .SplitPane
         .SplitPane-left {left}
@@ -335,13 +363,11 @@ test 'leading-dot classname', ->
       return .shutter {el}
 
     f(.pane)
-  '''
-  output = '''
+    '''
+    '''
     var SplitPane, f, x;
 
-    SplitPane = function(arg) {
-      var left, right;
-      left = arg.left, right = arg.right;
+    SplitPane = function({left, right}) {
       return <div className='SplitPane'><div className='SplitPane-left'>{left}</div> <div className='SplitPane-right'>{right}</div></div>;
     };
 
@@ -352,11 +378,12 @@ test 'leading-dot classname', ->
     };
 
     f(<div className='pane'></div>);
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'all together now', ->
-  input = '''
+  eqJS(
+    '''
     Recipe = ({name, ingredients, steps}) ->
       %section( id={ name.toLowerCase().replace(/ /g, '-')})
         %h1= name
@@ -368,18 +395,17 @@ test 'all together now', ->
           {steps.map (step, i) ->
             %p( key={i} )= step
           }
-  '''
-  output = '''
+    '''
+    '''
     var Recipe;
 
-    Recipe = function(arg) {
-      var FORCE_EXPRESSION, i, ingredients, name, steps;
-      name = arg.name, ingredients = arg.ingredients, steps = arg.steps;
+    Recipe = function({name, ingredients, steps}) {
+      var FORCE_EXPRESSION, i;
       return <section id={name.toLowerCase().replace(/ /g, '-')}><h1>{name}</h1> <ul className='ingredients'>{FORCE_EXPRESSION = (function() {
         var j, len, results;
         results = [];
         for (i = j = 0, len = ingredients.length; j < len; i = ++j) {
-          name = ingredients[i].name;
+          ({name} = ingredients[i]);
           results.push(<li key={i}>{ingredient.name}</li>);
         }
         return results;
@@ -387,17 +413,18 @@ test 'all together now', ->
         return <p key={i}>{step}</p>;
       })}</section></section>;
     };
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'indented = expression following outdent', ->
-  input = '''
+  eqJS(
+    '''
     .table-responsive.small
       %thead
         %tr
       = %Appt{ appt, key: appt.id } for appt in data.appts
-  '''
-  output = '''
+    '''
+    '''
     var FORCE_EXPRESSION, appt;
 
     <div className='table-responsive small'><thead><tr></tr></thead> {FORCE_EXPRESSION = (function() {
@@ -410,40 +437,43 @@ test 'indented = expression following outdent', ->
       }
       return results;
     })()}</div>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'outer leading #', ->
-  input = '''
+  eqJS(
+    '''
     #abc
       #def.ghi.jkl
-  '''
-  output = '''<div id='abc'><div id='def' className='ghi jkl'></div></div>;'''
-  eq toJS(input), output
+    '''
+    '''<div id='abc'><div id='def' className='ghi jkl'></div></div>;'''
+  )
 
 test 'leading dot class after if', ->
-  input = '''
+  eqJS(
+    '''
     %div
       = if a
         .small
-  '''
-  output = '''
+    '''
+    '''
     var FORCE_EXPRESSION;
 
     <div>{FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}</div>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'leading dot class after blank line', ->
-  input = '''
+  eqJS(
+    '''
     {a} = b
 
     .small
 
     {c} = d
     .big
-  '''
-  output = '''
+    '''
+    '''
     var a, c;
 
     a = b.a;
@@ -451,16 +481,17 @@ test 'leading dot class after blank line', ->
     <div className='small'></div>;
 
     c = d.big.c;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'leading interpreted dot class', ->
-  input = '''
+  eqJS(
+    '''
     .( 'small', 'text-danger': not mobile_confirm )
 
     .( 'small', 'text-danger': not mobile_confirm ){ other: attr }
-  '''
-  output = '''
+    '''
+    '''
     <div className={classNames('small', {
       'text-danger': !mobile_confirm
     })}></div>;
@@ -468,11 +499,12 @@ test 'leading interpreted dot class', ->
     <div other={attr} className={classNames('small', {
       'text-danger': !mobile_confirm
     })}></div>;
-  '''
-  eq toJS(input), output
+    '''
+  )
 
 test 'allow closer at same indent', ->
-  input = '''
+  eqJS(
+    '''
     %h1
       = a(
         if b
@@ -495,8 +527,8 @@ test 'allow closer at same indent', ->
       = a {
         b, c
       }
-  '''
-  output = '''
+    '''
+    '''
     var FORCE_EXPRESSION;
 
     <h1>{FORCE_EXPRESSION = a(b ? 1 : 2)}</h1>;
@@ -507,12 +539,9 @@ test 'allow closer at same indent', ->
 
     <h4>{a} )</h4>;
 
-    <h5>{a({
-      b: b,
-      c: c
-    })}</h5>;
-  '''
-  eq toJS(input), output
+    <h5>{a({b, c})}</h5>;
+    '''
+  )
 
 # TODO:
 # error tests:

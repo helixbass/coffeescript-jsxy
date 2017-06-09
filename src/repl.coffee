@@ -2,12 +2,14 @@ fs = require 'fs'
 path = require 'path'
 vm = require 'vm'
 nodeREPL = require 'repl'
-CoffeeScript = require './coffee-script'
+CoffeeScript = require './'
 {merge, updateSyntaxError} = require './helpers'
 
 replDefaults =
   prompt: 'coffee> ',
-  historyFile: path.join process.env.HOME, '.coffee_history' if process.env.HOME
+  historyFile: do ->
+    historyPath = process.env.XDG_CACHE_HOME or process.env.HOME
+    path.join historyPath, '.coffee_history' if historyPath
   historyMaxInputSize: 10240
   eval: (input, context, filename, cb) ->
     # XXX: multiline hack.
@@ -33,7 +35,7 @@ replDefaults =
       ast = CoffeeScript.nodes tokens
       # Add assignment to `_` variable to force the input to be an expression.
       ast = new Block [
-        new Assign (new Value new Literal '_'), ast, '='
+        new Assign (new Value new Literal '__'), ast, '='
       ]
       js = ast.compile {bare: yes, locals: Object.keys(context), referencedVars}
       cb null, runInContext js, context, filename
@@ -109,7 +111,7 @@ addHistory = (repl, filename, maxSize) ->
     size = Math.min maxSize, stat.size
     # Read last `size` bytes from the file
     readFd = fs.openSync filename, 'r'
-    buffer = new Buffer(size)
+    buffer = Buffer.alloc size
     fs.readSync readFd, buffer, 0, size, stat.size - size
     fs.closeSync readFd
     # Set the history on the interpreter
@@ -147,8 +149,8 @@ module.exports =
   start: (opts = {}) ->
     [major, minor, build] = process.versions.node.split('.').map (n) -> parseInt(n, 10)
 
-    if major is 0 and minor < 8
-      console.warn "Node 0.8.0+ required for CoffeeScript REPL"
+    if major < 6
+      console.warn "Node 6+ required for CoffeeScript REPL"
       process.exit 1
 
     CoffeeScript.register()
