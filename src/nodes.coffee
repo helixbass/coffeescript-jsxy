@@ -1379,7 +1379,7 @@ exports.Class = class Class extends Base
 
   compileNode: (o) ->
     @name          = @determineName()
-    executableBody = @walkBody()
+    executableBody = @walkBody(o)
 
     # Special handling to allow `class expr.A extends A` declarations
     parentName    = @parent.base.value if @parent instanceof Value and not @parent.hasProperties()
@@ -1402,12 +1402,18 @@ exports.Class = class Class extends Base
       result
 
   compileClassDeclaration: (o) ->
-    @ctor ?= @makeDefaultConstructor() if @externalCtor
+    @ctor ?= @makeDefaultConstructor() if @externalCtor or @boundMethods.length
     @ctor?.noReturn = true
+
+    @proxyBoundMethods o if @boundMethods.length
 
     o.indent += TAB
 
     result = []
+    if @assignParentRef
+      result.push @makeCode "("
+      result.push @assignParentRef.compileToFragments(o)...
+      result.push @makeCode ", "
     result.push @makeCode "class "
     result.push @makeCode "#{@name} " if @name
     result.push @makeCode('extends '), @parent.compileToFragments(o)..., @makeCode ' ' if @parent
@@ -1419,6 +1425,8 @@ exports.Class = class Class extends Base
       result.push @body.compileToFragments(o, LEVEL_TOP)...
       result.push @makeCode "\n#{@tab}"
     result.push @makeCode '}'
+    if @assignParentRef
+      result.push @makeCode ")"
 
     result
 
@@ -1438,8 +1446,18 @@ exports.Class = class Class extends Base
       @variable.error message if message
     if name in JS_FORBIDDEN then "_#{name}" else name
 
-  walkBody: ->
+  setParentRef: (o) ->
+    return if @_setParentRef
+    @_setParentRef = yes
+
+    if @parent?.shouldCache()
+      ref = new IdentifierLiteral o.scope.freeVariable 'ref'
+      @assignParentRef = new Assign ref, @parent
+      @parent = ref
+
+  walkBody: (o) ->
     @ctor          = null
+    @boundMethods  = []
     executableBody = null
 
     initializer     = []
@@ -1485,6 +1503,10 @@ exports.Class = class Class extends Base
         @ctor = method
       else if method.isStatic and method.bound
         method.context = @name
+      else if method.bound
+        @boundMethods.push method.name
+        @setParentRef(o)
+        method.parentClass = @parent
 
     if initializer.length isnt expressions.length
       @body.expressions = (expression.hoist() for expression in initializer)
@@ -1522,7 +1544,7 @@ exports.Class = class Class extends Base
       method.name = new (if methodName.shouldCache() then Index else Access) methodName
       method.name.updateLocationDataIfMissing methodName.locationData
       method.ctor = (if @parent then 'derived' else 'base') if methodName.value is 'constructor'
-      method.error 'Methods cannot be bound functions' if method.bound
+      method.error 'Cannot define a constructor as a bound (fat arrow) function' if method.bound and method.ctor
 
     method
 
@@ -1540,6 +1562,13 @@ exports.Class = class Class extends Base
       ctor.body.makeReturn()
 
     ctor
+
+  proxyBoundMethods: (o) ->
+    @ctor.thisAssignments = for name in @boundMethods by -1
+      name = new Value(new ThisLiteral, [ name ])
+      new Assign name, new Call(new Value(name, [new Access new PropertyName 'bind']), [new ThisLiteral])
+
+    null
 
 exports.ExecutableClassBody = class ExecutableClassBody extends Base
   children: [ 'class', 'body' ]
@@ -1624,7 +1653,7 @@ exports.ExecutableClassBody = class ExecutableClassBody extends Base
     @body.traverseChildren false, (node) =>
       if node instanceof ThisLiteral
         node.value   = @name
-      else if node instanceof Code and node.bound
+      else if node instanceof Code and node.bound and node.isStatic
         node.context = @name
 
   # Make class/prototype assignments for invalid ES properties
@@ -2264,6 +2293,9 @@ exports.Code = class Code extends Base
     wasEmpty = @body.isEmpty()
     @body.expressions.unshift thisAssignments... unless @expandCtorSuper thisAssignments
     @body.expressions.unshift exprs...
+    if @isMethod and @bound and not @isStatic and @parentClass
+      boundMethodCheck = new Value new Literal utility 'boundMethodCheck', o
+      @body.expressions.unshift new Call(boundMethodCheck, [new Value(new ThisLiteral), @parentClass])
     @body.makeReturn() unless wasEmpty or @noReturn
 
     # Assemble the output
@@ -3221,6 +3253,13 @@ exports.If = class If extends Base
 
 UTILITIES =
   modulo: -> 'function(a, b) { return (+a % (b = +b) + b) % b; }'
+  boundMethodCheck: -> "
+    function(instance, Constructor) {
+      if (!(instance instanceof Constructor)) {
+        throw new Error('Bound instance method accessed before binding');
+      }
+    }
+  "
 
   # Shortcuts to speed up the lookup time for native functions.
   hasProp: -> '{}.hasOwnProperty'
