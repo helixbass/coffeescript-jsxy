@@ -1227,13 +1227,26 @@ exports.Obj = class Obj extends Base
     yes
 
   shouldCache: ->
-    not @isAssignable()
+    # @hasSplat() in condition is needed to properly process object spread properties
+    # in function parameters, and can be removed once the proposal hits Stage 4.
+    # Example: foo({a, b, r...}) => foo(arg) { ({a,b} = arg), r = ... }
+    not @isAssignable() or @hasSplat()
+
+  # Check if object contains splat. 
+  hasSplat: ->
+    splat = yes for prop in @properties when prop instanceof Splat 
+    splat ? no
 
   compileNode: (o) ->
     props = @properties
     if @generated
       for node in props when node instanceof Value
         node.error 'cannot have an implicit value in an implicit object'
+    
+    # Object spread properties. https://github.com/tc39/proposal-object-rest-spread/blob/master/Spread.md
+    # obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})
+    return @compileSpread o if @hasSplat()
+    
     idt        = o.indent += TAB
     lastNoncom = @lastNonComment @properties
 
@@ -1262,7 +1275,7 @@ exports.Obj = class Obj extends Base
       else
         ',\n'
       indent = if isCompact or prop instanceof Comment then '' else idt
-
+      
       key = if prop instanceof Assign and prop.context is 'object'
         prop.variable
       else if prop instanceof Assign
@@ -1270,12 +1283,10 @@ exports.Obj = class Obj extends Base
         prop.variable
       else if prop not instanceof Comment
         prop
-
       if key instanceof Value and key.hasProperties()
         key.error 'invalid object key' if prop.context is 'object' or not key.this
         key  = key.properties[0].name
         prop = new Assign key, prop, 'object'
-
       if key is prop
         if prop.shouldCache()
           [key, value] = prop.base.cache o
@@ -1283,7 +1294,6 @@ exports.Obj = class Obj extends Base
           prop = new Assign key, value, 'object'
         else if not prop.bareLiteral?(IdentifierLiteral)
           prop = new Assign prop, prop, 'object'
-
       if indent then answer.push @makeCode indent
       answer.push prop.compileToFragments(o, LEVEL_TOP)...
       if join then answer.push @makeCode join
@@ -1301,6 +1311,29 @@ exports.Obj = class Obj extends Base
       prop = prop.unwrapAll()
       prop.eachName iterator if prop.eachName?
 
+  # Object spread properties. https://github.com/tc39/proposal-object-rest-spread/blob/master/Spread.md
+  # obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})
+  compileSpread: (o) ->
+    props = @properties
+    # Store object spreads.
+    splatSlice = []
+    propSlices = []
+    slices = []
+    addSlice = -> 
+      slices.push new Obj propSlices if propSlices.length      
+      slices.push splatSlice... if splatSlice.length
+      splatSlice = []
+      propSlices = []
+    for prop in props
+      if prop instanceof Splat
+        splatSlice.push new Value prop.name
+        addSlice()
+      else
+        propSlices.push prop
+    addSlice()
+    slices.unshift new Obj unless slices[0] instanceof Obj
+    (new Call new Literal('Object.assign'), slices).compileToFragments o
+      
 exports.JsxAttributesObj = class JsxAttributesObj extends Obj
   compileNode: (o) ->
     answer = []
@@ -1878,7 +1911,7 @@ exports.Assign = class Assign extends Base
     if isValue
       # When compiling `@variable`, remember if it is part of a function parameter.
       @variable.param = @param
-
+      
       # If `@variable` is an array or an object, we’re destructuring;
       # if it’s also `isAssignable()`, the destructuring syntax is supported
       # in ES and we can output it as is; otherwise we `@compileDestructuring`
@@ -1889,7 +1922,8 @@ exports.Assign = class Assign extends Base
         # destructured variables.
         @variable.base.lhs = yes
         return @compileDestructuring o unless @variable.isAssignable()
-
+        # Object destructuring. Can be removed once ES proposal hits Stage 4.
+        return @compileObjectDestruct(o) if @variable.isObject() and @variable.contains((n) -> n instanceof Splat)
       return @compileSplice       o if @variable.isSplice()
       return @compileConditional  o if @context in ['||=', '&&=', '?=']
       return @compileSpecialMath  o if @context in ['**=', '//=', '%%=']
@@ -1936,6 +1970,83 @@ exports.Assign = class Assign extends Base
       @wrapInParentheses answer
     else
       answer
+
+  # Check object destructuring variable for rest elements;
+  # can be removed once ES proposal hits Stage 4.
+  compileObjectDestruct: (o) ->
+    # Per https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#Assignment_without_declaration,
+    # if we’re destructuring without declaring, the destructuring assignment must be wrapped in parentheses.
+    # ({a, b} = obj)
+    # Helper function setScopeVar() declares vars 'a' and 'b' at the top of the current scope.
+    setScopeVar = (prop) ->
+      newVar = false
+      return if prop instanceof Assign and prop.value.base instanceof Obj
+      if prop instanceof Assign
+        if prop.value.base instanceof IdentifierLiteral
+          newVar = prop.value.base.compile o
+        else 
+          newVar = prop.variable.base.compile o
+      else
+        newVar = prop.compile o
+      o.scope.add(newVar, 'var', true) if newVar
+    # Helper function getPropValue() returns compiled object property value.
+    # These values are then passed as an argument to helper function objectWithoutKeys 
+    # which is used to assign object value to the destructuring rest variable.
+    getPropValue = (prop, quote = no) ->
+      wrapInQutes = (prop) -> 
+        compiledProp = prop.compile o
+        compiledProp = "'#{compiledProp}'" if quote
+        (new Literal compiledProp).compile o
+      setScopeVar prop # Declare a variable in the scope.
+      if prop instanceof Assign
+        return prop.variable.compile o if prop.variable.base instanceof StringWithInterpolations or prop.variable.base instanceof StringLiteral
+        return wrapInQutes prop.variable
+      else
+        return wrapInQutes prop
+    # Recursive function for searching and storing rest elements in objects.
+    # Parameter props[] is used to store nested object properties,
+    # e.g. `{a: {b, c: {d, r1...}, r2...}, r3...} = obj`.
+    traverseRest = (properties, path = []) ->
+      results = []
+      restElement = no
+      for prop, key in properties
+        if prop instanceof Assign and prop.value.base instanceof Obj          
+          results = traverseRest prop.value.base.objects, [path..., getPropValue prop]
+        if prop instanceof Splat
+          prop.error "multiple rest elements are disallowed in object destructuring" if restElement
+          restKey = key
+          restElement = { 
+            name: prop.unwrap(), 
+            path
+          }  
+      if restElement
+        # Remove rest element from the properties.
+        properties.splice restKey, 1
+        # Prepare array of compiled property keys to be excluded from the object.
+        restElement["excludeProps"] = new Literal "[#{(getPropValue(prop, yes) for prop in properties)}]"
+        results.push restElement
+      results
+    fragments = []
+    {properties} = @variable.base
+    # Find all rest elements.
+    restList = traverseRest properties
+    val = @value.compileToFragments o, LEVEL_LIST  
+    vvarText = fragmentsToText val
+    # Make value into a simple variable if it isn't already.
+    if (@value.unwrap() not instanceof IdentifierLiteral) or @variable.assigns vvarText 
+      ref = o.scope.freeVariable 'obj'
+      fragments.push [@makeCode(ref + ' = '), val...]
+      val = (new IdentifierLiteral ref).compileToFragments o, LEVEL_TOP
+      vvarText = ref
+    compiledName = @variable.compileToFragments o, LEVEL_TOP
+    objVar = compiledName.concat @makeCode(" = "), val
+    fragments.push @wrapInParentheses objVar
+    for restElement in restList
+      varProp = if restElement.path.length then ".#{restElement.path.join '.'}" else ""
+      vvarPropText = new Literal "#{vvarText}#{varProp}"
+      extractKeys = new Call new Value(new Literal(utility('objectWithoutKeys', o))), [vvarPropText, restElement.excludeProps]
+      fragments.push new Assign(restElement.name, extractKeys, null).compileToFragments o, LEVEL_LIST
+    @joinFragmentArrays fragments, ", "
 
   # Brief implementation of recursive pattern matching, when assigning array or
   # object literals to a value. Peeks at their properties to assign inner names.
@@ -2191,14 +2302,13 @@ exports.Code = class Code extends Base
     @eachParamName (name, node, param) ->
       node.error "multiple parameters named '#{name}'" if name in paramNames
       paramNames.push name
-
       if node.this
         name   = node.properties[0].name.value
         name   = "_#{name}" if name in JS_FORBIDDEN
         target = new IdentifierLiteral o.scope.freeVariable name
         param.renameParam node, target
         thisAssignments.push new Assign node, target
-
+        
     # Parse the parameters, adding them to the list of parameters to put in the
     # function definition; and dealing with splats or expansions, including
     # adding expressions to the function body to declare all parameter
@@ -2216,7 +2326,6 @@ exports.Code = class Code extends Base
           param.error 'only one splat or expansion parameter is allowed per function definition'
         else if param instanceof Expansion and @params.length is 1
           param.error 'an expansion parameter cannot be the only parameter in a function definition'
-
         haveSplatParam = yes
         if param.splat
           if param.name instanceof Arr
@@ -2421,7 +2530,8 @@ exports.Param = class Param extends Base
       name = node.properties[0].name.value
       name = "_#{name}" if name in JS_FORBIDDEN
       node = new IdentifierLiteral o.scope.freeVariable name
-    else if node.shouldCache()
+    else if node.shouldCache() or node.lhs
+      # node.lhs is checked in case we have object destructuring as function parameter. Can be removed once ES proposal for object spread hots Stage 4.
       node = new IdentifierLiteral o.scope.freeVariable 'arg'
     node = new Value node
     node.updateLocationDataIfMissing @locationData
@@ -3269,12 +3379,19 @@ UTILITIES =
       }
     }
   "
-
+  # objectWithoutKeys: -> 'function(obj, props) { return Object.keys(obj).reduce(function(a,c) { return (![].includes.call(props, c)) && (a[c] = obj[c]), a; }, {}); }'
+  objectWithoutKeys: -> "
+      function(o, ks) {
+        var res = {};
+        for (var k in o) ([].indexOf.call(ks, k) < 0 && {}.hasOwnProperty.call(o, k)) && (res[k] = o[k]);
+        return res;
+      }"
   # Shortcuts to speed up the lookup time for native functions.
   hasProp: -> '{}.hasOwnProperty'
   indexOf: -> '[].indexOf'
   slice  : -> '[].slice'
   splice : -> '[].splice'
+  
 
 # Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.
