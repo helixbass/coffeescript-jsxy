@@ -932,14 +932,16 @@ exports.JsxElement = class JsxElement extends Base
     ]
 
     isString = (obj) -> Object.prototype.toString.call(obj) is '[object String]'
+    initialIndent = o.indent
     compiledChildren = do =>
       return [] unless @children_.length
 
+      idt = o.indent += TAB
       compiled =
         flatten(
           for child in @children_
             [
-              @makeCode ' '
+              @makeCode "\n#{idt}"
               (if isString child # content
                 [@makeCode child]
               else if child instanceof JsxElement
@@ -953,10 +955,11 @@ exports.JsxElement = class JsxElement extends Base
               )...
             ]
         )
-      [initialSpace, compiled...] = compiled
       compiled
 
+    idt = initialIndent
     endTag = [
+      @makeCode "\n#{idt}"
       @makeCode '</'
       @makeCode @name
       @makeCode '>'
