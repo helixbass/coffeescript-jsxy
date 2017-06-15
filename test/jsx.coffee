@@ -754,6 +754,16 @@ test 'whitespace', ->
     '''
   )
 
+test 'spread props', ->
+  eqJS(
+    '''
+    %a{ b... }
+    '''
+    '''
+    <a {...b}></a>;
+    '''
+  )
+
 # TODO:
 # errors on stray <
 # error tests:

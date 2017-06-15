@@ -1370,10 +1370,17 @@ exports.JsxAttributesObj = class JsxAttributesObj extends Obj
           prop.variable.error 'invalid object key'
       else if prop instanceof Value and prop.this
         prop = new Assign prop.properties[0].name, prop, '='
-      else
+      else unless prop instanceof Splat
         prop = new Assign prop, prop, '='
       prop.jsxAttribute = yes
-      answer.push prop.compileToFragments(o, LEVEL_TOP)...
+      compiled = prop.compileToFragments(o, LEVEL_TOP)
+      if prop instanceof Splat
+        compiled = [
+          @makeCode '{'
+          compiled...
+          @makeCode '}'
+        ]
+      answer.push compiled...
     answer
 
 #### Arr
