@@ -677,8 +677,12 @@ exports.Lexer = class Lexer
 
   matchJsxElementIndentedExpression: ({followsNewline, followsWhitespace, preserveWhitespace}) ->
     if followsNewline and match = JSX_ELEMENT_INDENTED_EQUALS_EXPRESSION_START.exec(@chunk)
-      @token '{', '=', 0, 0
+      open = @token '{', '=', 0, 0
       @consumeChunk match[0].length
+
+      if inline = JSX_INLINE_INDICATOR.exec @chunk
+        open[0] = 'JSX_INLINE_EXPRESSION_START'
+        @consumeChunk inline[0].length
 
       endOfExpressionOffset = @offsetOfNextOutdent()
       [line, column] = @getLineAndColumnFromChunk 0
