@@ -987,6 +987,8 @@ exports.JsxElement = class JsxElement extends Base
 exports.JsxInlineContent = class JsxInlineContent extends Base
 
   constructor: (@str) ->
+    super()
+
     @inline = 'IMMEDIATE'
 
 # A range literal. Ranges can be used to extract portions (slices) of arrays,
