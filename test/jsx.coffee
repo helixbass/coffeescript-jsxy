@@ -5,7 +5,11 @@ test 'simple inline element', ->
   # element = %h1 Hello, world!
   eqJS(
     '%h1 Hello, world!'
-    '<h1>Hello, world!</h1>;'
+    '''
+    <h1>
+      Hello, world!
+    </h1>;
+    '''
   )
 
 test 'simple indented element', ->
@@ -14,7 +18,11 @@ test 'simple indented element', ->
     %h1
       Hello, world!
     '''
-    '<h1>Hello, world!</h1>;'
+    '''
+    <h1>
+      Hello, world!
+    </h1>;
+    '''
   )
 
 test 'simple nested element', ->
@@ -24,7 +32,13 @@ test 'simple nested element', ->
       %a
         Hello, world!
     '''
-    '<h1><a>Hello, world!</a></h1>;'
+    '''
+    <h1>
+      <a>
+        Hello, world!
+      </a>
+    </h1>;
+    '''
   )
 
 test 'inline element, no body', ->
@@ -42,37 +56,41 @@ test 'inline element with parenthesized attributes', ->
 test 'inline element with parenthesized attributes and content', ->
   eqJS(
     '''%h1( a="b" c='def' g={h + i}) jkl'''
-    '''<h1 a="b" c='def' g={h + i}>jkl</h1>;'''
+    '''
+    <h1 a="b" c='def' g={h + i}>
+      jkl
+    </h1>;
+    '''
   )
 
 test 'inline =expressionBody', ->
   eqJS(
     '%h1= name'
-    '<h1>{name}</h1>;'
+    '''
+    <h1>
+      {name}
+    </h1>;
+    '''
   )
 
 test 'expression inline content', ->
   eqJS(
     '%h1 {@abc}'
-    '<h1>{this.abc}</h1>;'
+    '''
+    <h1>
+      {this.abc}
+    </h1>;
+    '''
   )
 
 test 'mixed inline content', ->
   eqJS(
     '%h1 name {@abc}'
-    '<h1>name {this.abc}</h1>;'
-  )
-
-test 'mixed inline content normalize whitespace', ->
-  eqJS(
-    '%h1 name  {@abc}'
-    '<h1>name {this.abc}</h1>;'
-  )
-
-test 'mixed inline content normalize trailing whitespace', ->
-  eqJS(
-    '%h1 name  {@abc} '
-    '<h1>name {this.abc}</h1>;'
+    '''
+    <h1>
+      name {this.abc}
+    </h1>;
+    '''
   )
 
 test 'indented equals expression', ->
@@ -81,7 +99,11 @@ test 'indented equals expression', ->
     %h1
       = abc
     '''
-    '<h1>{abc}</h1>;'
+    '''
+    <h1>
+      {abc}
+    </h1>;
+    '''
   )
 
 test 'no equals expression unless line-starting', ->
@@ -94,8 +116,15 @@ test 'no equals expression unless line-starting', ->
       {w} = abc
       =abc
     '''
-  # output = '<h1>x = abc y= abc {z}= abc {w} = abc {abc}</h1>;' TODO: once whitespace (or lack thereof) between children is fixed use this one
-    '<h1>x = abc y= abc {z} = abc {w} = abc {abc}</h1>;'
+    '''
+    <h1>
+      x = abc
+      y= abc
+      {z}= abc
+      {w} = abc
+      {abc}
+    </h1>;
+    '''
   )
 
 test 'equals for loop', ->
@@ -108,16 +137,20 @@ test 'equals for loop', ->
     '''
     var FORCE_EXPRESSION, x;
 
-    <h1>{FORCE_EXPRESSION = (function() {
-      var i, len, ref, results;
-      ref = ['a', 'b', 'c'];
-      results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        x = ref[i];
-        results.push(<b>{x}</b>);
-      }
-      return results;
-    })()}</h1>;
+    <h1>
+      {FORCE_EXPRESSION = (function() {
+        var i, len, ref, results;
+        ref = ['a', 'b', 'c'];
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          x = ref[i];
+          results.push(<b>
+            {x}
+          </b>);
+        }
+        return results;
+      })()}
+    </h1>;
     '''
   )
 
@@ -139,7 +172,18 @@ test 'various indented expressions', ->
       {
         @m }
     '''
-    '<h1>{this.x} {this.y} abc {this.z} def {this.g + h} {this.i + this.j} {this.k} {this.l} {this.m}</h1>;'
+    '''
+    <h1>
+      {this.x} {this.y}
+      abc
+      {this.z}
+      def {this.g + h}
+      {this.i + this.j}
+      {this.k}
+      {this.l}
+      {this.m}
+    </h1>;
+    '''
   )
 
 test 'simple object attributes', ->
@@ -235,7 +279,12 @@ test 'tag with attributes and indented body', ->
     </h1>
     '''
     '''
-    <h1 a="b" c={this.d}><b>Hey {this.name}</b></h1>;
+    <h1 a="b" c={this.d}>
+      <b>
+        Hey
+        {this.name}
+      </b>
+    </h1>;
     '''
   )
 
@@ -245,7 +294,7 @@ test 'nested inline tags', ->
     <h1   a="b" c = {@d} ><b > Hey {@name}</b></h1>
     '''
     '''
-    <h1 a="b" c={this.d}><b>Hey {this.name}</b></h1>;
+    <h1 a="b" c={this.d}><b> Hey {this.name}</b></h1>;
     '''
   )
 
@@ -271,7 +320,9 @@ test 'element enders', ->
 
     x(<h1></h1>, 2);
 
-    <h2>{FORCE_EXPRESSION = (a ? <a></a> : <b></b>)}</h2>;
+    <h2>
+      {FORCE_EXPRESSION = (a ? <a></a> : <b></b>)}
+    </h2>;
 
     [<a></a>, <b></b>];
 
@@ -303,7 +354,11 @@ test 'shorthand tags', ->
     %h1#abc
       #def.ghi.jkl
     '''
-    '''<h1 id='abc'><div id='def' className='ghi jkl'></div></h1>;'''
+    '''
+    <h1 id='abc'>
+      <div id='def' className='ghi jkl'></div>
+    </h1>;
+    '''
   )
 
 test 'multiline attributes', ->
@@ -322,7 +377,12 @@ test 'multiline attributes', ->
         )
     '''
     '''
-    <h1 a={b} c='d'><a e={f(g)} h='i'><b j='k' l='m'></b> <b n='o' p='q'></b></a></h1>;
+    <h1 a={b} c='d'>
+      <a e={f(g)} h='i'>
+        <b j='k' l='m'></b>
+        <b n='o' p='q'></b>
+      </a>
+    </h1>;
     '''
   )
 
@@ -343,7 +403,12 @@ test 'multiline attributes in tags', ->
       </a></h1>
     '''
     '''
-    <h1 a={b} c='d'><a e={f(g)} h='i'><b j='k' l='m'></b> <b n='o' p='q'></b></a></h1>;
+    <h1 a={b} c='d'>
+      <a e={f(g)} h='i'>
+        <b j='k' l='m'></b>
+        <b n='o' p='q'></b>
+      </a>
+    </h1>;
     '''
   )
 
@@ -368,13 +433,24 @@ test 'leading-dot classname', ->
     var SplitPane, f, x;
 
     SplitPane = function({left, right}) {
-      return <div className='SplitPane'><div className='SplitPane-left'>{left}</div> <div className='SplitPane-right'>{right}</div></div>;
+      return <div className='SplitPane'>
+        <div className='SplitPane-left'>
+          {left}
+        </div>
+        <div className='SplitPane-right'>
+          {right}
+        </div>
+      </div>;
     };
 
-    x = <div className='abc'><div className='def'></div></div>;
+    x = <div className='abc'>
+      <div className='def'></div>
+    </div>;
 
     f = function(el) {
-      return <div className='shutter'>{el}</div>;
+      return <div className='shutter'>
+        {el}
+      </div>;
     };
 
     f(<div className='pane'></div>);
@@ -401,17 +477,34 @@ test 'all together now', ->
 
     Recipe = function({name, ingredients, steps}) {
       var FORCE_EXPRESSION, i;
-      return <section id={name.toLowerCase().replace(/ /g, '-')}><h1>{name}</h1> <ul className='ingredients'>{FORCE_EXPRESSION = (function() {
-        var j, len, results;
-        results = [];
-        for (i = j = 0, len = ingredients.length; j < len; i = ++j) {
-          ({name} = ingredients[i]);
-          results.push(<li key={i}>{ingredient.name}</li>);
-        }
-        return results;
-      })()}</ul> <section className='instructions'><h2>Cooking Instructions</h2> {steps.map(function(step, i) {
-        return <p key={i}>{step}</p>;
-      })}</section></section>;
+      return <section id={name.toLowerCase().replace(/ /g, '-')}>
+        <h1>
+          {name}
+        </h1>
+        <ul className='ingredients'>
+          {FORCE_EXPRESSION = (function() {
+            var j, len, results;
+            results = [];
+            for (i = j = 0, len = ingredients.length; j < len; i = ++j) {
+              ({name} = ingredients[i]);
+              results.push(<li key={i}>
+                {ingredient.name}
+              </li>);
+            }
+            return results;
+          })()}
+        </ul>
+        <section className='instructions'>
+          <h2>
+            Cooking Instructions
+          </h2>
+          {steps.map(function(step, i) {
+            return <p key={i}>
+              {step}
+            </p>;
+          })}
+        </section>
+      </section>;
     };
     '''
   )
@@ -427,16 +520,21 @@ test 'indented = expression following outdent', ->
     '''
     var FORCE_EXPRESSION, appt;
 
-    <div className='table-responsive small'><thead><tr></tr></thead> {FORCE_EXPRESSION = (function() {
-      var i, len, ref, results;
-      ref = data.appts;
-      results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        appt = ref[i];
-        results.push(<Appt appt={appt} key={appt.id}></Appt>);
-      }
-      return results;
-    })()}</div>;
+    <div className='table-responsive small'>
+      <thead>
+        <tr></tr>
+      </thead>
+      {FORCE_EXPRESSION = (function() {
+        var i, len, ref, results;
+        ref = data.appts;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          appt = ref[i];
+          results.push(<Appt appt={appt} key={appt.id}></Appt>);
+        }
+        return results;
+      })()}
+    </div>;
     '''
   )
 
@@ -446,7 +544,11 @@ test 'outer leading #', ->
     #abc
       #def.ghi.jkl
     '''
-    '''<div id='abc'><div id='def' className='ghi jkl'></div></div>;'''
+    '''
+    <div id='abc'>
+      <div id='def' className='ghi jkl'></div>
+    </div>;
+    '''
   )
 
 test 'leading dot class after if', ->
@@ -459,7 +561,9 @@ test 'leading dot class after if', ->
     '''
     var FORCE_EXPRESSION;
 
-    <div>{FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}</div>;
+    <div>
+      {FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}
+    </div>;
     '''
   )
 
@@ -531,19 +635,118 @@ test 'allow closer at same indent', ->
     '''
     var FORCE_EXPRESSION;
 
-    <h1>{FORCE_EXPRESSION = a(b ? 1 : 2)}</h1>;
+    <h1>
+      {FORCE_EXPRESSION = a(b ? 1 : 2)}
+    </h1>;
 
-    <h2>{a} b</h2>;
+    <h2>
+      {a}
+      b
+    </h2>;
 
-    <h3>{a([b])} c</h3>;
+    <h3>
+      {a([b])}
+      c
+    </h3>;
 
-    <h4>{a} )</h4>;
+    <h4>
+      {a}
+      )
+    </h4>;
 
-    <h5>{a({b, c})}</h5>;
+    <h5>
+      {a({b, c})}
+    </h5>;
+    '''
+  )
+
+test 'whitespace', ->
+  eqJS(
+    '''
+      <a> a{b} c {d} </a>
+      %a
+        {z} a
+      %a a{b} c {d}
+      %a {a}{b}
+      %a
+        {a}{b}
+      %a {a} {b}
+      %a
+        {a} {b}
+      %a {a}<a/>b{c}
+      %a
+        {a}<a/>b{c}
+      %a {a} <a/> b
+      %a
+        {a} <a/> b
+      %a
+        {a} %b c
+      <a> {b} </a>
+      <a> <b/> </a>
+      %a
+        abc <b/>
+    '''
+    '''
+    <a> a{b} c {d} </a>;
+
+    <a>
+      {z} a
+    </a>;
+
+    <a>
+      a{b} c {d}
+    </a>;
+
+    <a>
+      {a}{b}
+    </a>;
+
+    <a>
+      {a}{b}
+    </a>;
+
+    <a>
+      {a} {b}
+    </a>;
+
+    <a>
+      {a} {b}
+    </a>;
+
+    <a>
+      {a}<a></a>b{c}
+    </a>;
+
+    <a>
+      {a}<a></a>b{c}
+    </a>;
+
+    <a>
+      {a} <a></a> b
+    </a>;
+
+    <a>
+      {a} <a></a> b
+    </a>;
+
+    <a>
+      {a} <b>
+        c
+      </b>
+    </a>;
+
+    <a> {b} </a>;
+
+    <a> <b></b> </a>;
+
+    <a>
+      abc <b></b>
+    </a>;
     '''
   )
 
 # TODO:
+# errors on stray <
 # error tests:
 # - no whitespace before element body
 # - outdented end tag, expression }, ...

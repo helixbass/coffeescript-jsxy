@@ -302,6 +302,7 @@ exports.Lexer = class Lexer
     return unless length
     [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk length
     @chunk = @chunk[length..]
+    length
 
   matchJsxElement: (opts = {}) ->
     {topLevel} = opts
@@ -327,8 +328,10 @@ exports.Lexer = class Lexer
     errorExpectedEndTag = =>
       @error "expected JSX end tag #{endTag}"
     originalIndent = @indent
+    followsWhitespace = followsNewline
     loop
-      {popLevels} = @matchJsxElementIndentedChild {followsNewline, untilEndTag: elementName}
+      {popLevels, trailingWhitespace: followsWhitespace} =
+        @matchJsxElementIndentedChild {followsNewline, followsWhitespace, preserveWhitespace: not indentedBody}
       errorExpectedEndTag() if popLevels or not @chunk or (outdentNext = 'outdent' is @lineToken(dry: yes)) and not indentedBody
       if outdentNext
         {numOutdents, consumed} = @lineToken(returnNumOutdents: yes, noNewlines: yes)
@@ -340,10 +343,11 @@ exports.Lexer = class Lexer
         @token 'JSX_END_TAG', endTag
         @consumeChunk endTag.length
         return {}
+      # TODO: error on stray <
       errorExpectedEndTag() if justOutdented and @indent < originalIndent
       followsNewline = @lineToken(dry: yes)
 
-  matchJsxStartTag: ({allowLeadingWhitespace}) ->
+  matchJsxStartTag: ({allowLeadingWhitespace, topLevel, followsNewline, followsWhitespace} = {}) ->
     tagRegex =
       if allowLeadingWhitespace
         JSX_TAG_LEADING_WHITESPACE
@@ -351,6 +355,14 @@ exports.Lexer = class Lexer
         JSX_TAG
     return unless match = tagRegex.exec(@chunk)
     [[], tagOpener, elementName] = match
+    followsWhitespace = yes if tagOpener.length > 1
+    @token(
+      if followsWhitespace
+        'JSX_INLINE_ELEMENT'
+      else
+        'JSX_IMMEDIATE_INLINE_ELEMENT'
+      ''
+    ) unless topLevel or followsNewline
     token = @makeToken 'JSX_START_TAG_START', '<'
     @ends.push {tag: '>', origin: token}
     @tokens.push token
@@ -361,7 +373,7 @@ exports.Lexer = class Lexer
     selfClosed = ret?.selfClosed
     {elementName, selfClosed}
 
-  matchJsxHamlElement: ({allowLeadingWhitespace, allowLeadingDotClass}) ->
+  matchJsxHamlElement: ({allowLeadingWhitespace, allowLeadingDotClass, topLevel, followsNewline, followsWhitespace}) ->
     elementRegex =
       if allowLeadingWhitespace
         JSX_ELEMENT_LEADING_WHITESPACE
@@ -369,6 +381,14 @@ exports.Lexer = class Lexer
         JSX_ELEMENT
     if match = elementRegex.exec(@chunk)
       [openingTag, elementName] = match
+      followsWhitespace = yes if openingTag.length > elementName.length
+      @token(
+        if followsWhitespace
+          'JSX_INLINE_ELEMENT'
+        else
+          'JSX_IMMEDIATE_INLINE_ELEMENT'
+        ''
+      ) unless topLevel or followsNewline
       @token 'JSX_ELEMENT_NAME', elementName, 0, openingTag.length
       @consumeChunk openingTag.length
       @matchJsxHamlShorthands({allowLeadingDotClass: yes})
@@ -445,9 +465,9 @@ exports.Lexer = class Lexer
   matchJsxIndentedBody: ({elementName, topLevel}) ->
     @token 'JSX_ELEMENT_BODY_START', elementName, 0, 0
     @consumeChunk @lineToken() # consume indent
-    followsNewline = yes
+    followsNewline = followsWhitespace = yes
     loop
-      {popLevels} = @matchJsxElementIndentedChild {followsNewline}
+      {popLevels, trailingWhitespace: followsWhitespace} = @matchJsxElementIndentedChild {followsNewline, followsWhitespace}
       if popLevels
         @token 'TERMINATOR', '\n', 0, 0 if topLevel
         return popLevels: popLevels - 1
@@ -456,6 +476,7 @@ exports.Lexer = class Lexer
         @consumeChunk consumed
         return popLevels: numOutdents - 1
       followsNewline = @lineToken(dry: yes) or popLevels?
+    # TODO: error on stray <
 
   matchJsxInlineBody: ({elementName, consumedWhitespace}) ->
     match = JSX_ELEMENT_INLINE_EQUALS_EXPRESSION.exec(@chunk)
@@ -483,20 +504,23 @@ exports.Lexer = class Lexer
     @error 'must include whitespace before JSX element body' unless consumedWhitespace or not @chunk
 
     alreadyStarted = no
+    startBody = =>
+      @token 'JSX_ELEMENT_BODY_START', elementName, 0, 0
+      alreadyStarted = yes
+
     loop
-      @consumeChunk @whitespaceToken()
-      if match = JSX_ELEMENT_INLINE_CONTENT.exec(@chunk)
-        @token 'JSX_ELEMENT_BODY_START', elementName, 0, 0 unless alreadyStarted
-        alreadyStarted = yes
+      # followsWhitespace = yes if @consumeChunk(@whitespaceToken()) and alreadyStarted
+      @consumeChunk @whitespaceToken() unless alreadyStarted
+      if matchedTag = @matchJsxStartTag()
+        {elementName, selfClosed} = matchedTag
+        @matchJsxTagBody({elementName}) unless selfClosed
+      else if match = JSX_ELEMENT_INLINE_CONTENT.exec(@chunk)
+        startBody() unless alreadyStarted
         [content] = match
-        contentLength = content.length
-        content = content.replace TRAILING_SPACES, ''
-        content = content.replace SIMPLE_STRING_OMIT, ' '
-        @token 'JSX_ELEMENT_CONTENT', content
-        @consumeChunk contentLength
+        @token 'JSX_ELEMENT_INLINE_CONTENT', content
+        @consumeChunk content.length
       else if match = JSX_ELEMENT_INLINE_EXPRESSION_START.exec(@chunk)
-        @token 'JSX_ELEMENT_BODY_START', elementName, 0, 0 unless alreadyStarted
-        alreadyStarted = yes
+        startBody() unless alreadyStarted
         endOfExpressionOffset = @offsetOfNextOutdent(yes)
         [line, column] = @getLineAndColumnFromChunk 0
         {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on}
@@ -506,12 +530,17 @@ exports.Lexer = class Lexer
 
         @jsxForceExpression({nested, inset: 1})
 
-        [..., close] = nested
+        [open, ..., close] = nested
         close.origin = ['', 'end of inline expression', close[2]]
+        open[0] = 'JSX_IMMEDIATE_INLINE_EXPRESSION_START'
+          # if followsWhitespace
+          #   'JSX_INLINE_EXPRESSION_START'
+          # else
+          #   'JSX_IMMEDIATE_INLINE_EXPRESSION_START'
 
         @tokens.push nested...
         @consumeChunk index
-      else break
+      else break # TODO: error on stray <
     @token 'JSX_ELEMENT_INLINE_BODY_END', elementName, 0, 0
     {}
 
@@ -603,8 +632,10 @@ exports.Lexer = class Lexer
     end ? yes
 
   matchJsxElementIndentedChild: (opts) ->
+    {followsNewline, followsWhitespace, preserveWhitespace} = opts
+
     @matchJsxElementIndentedExpression(opts)      ? \
-    @matchJsxElement(allowLeadingWhitespace: yes, allowLeadingDotClass: yes) ? \
+    @matchJsxElement({followsNewline, followsWhitespace, allowLeadingWhitespace: not preserveWhitespace, allowLeadingDotClass: yes}) ? \
     @matchJsxElementIndentedContentLine(opts)
 
   offsetOfNextOutdent: (greaterThan = no) ->
@@ -649,7 +680,7 @@ exports.Lexer = class Lexer
 
     match.index
 
-  matchJsxElementIndentedExpression: ({followsNewline}) ->
+  matchJsxElementIndentedExpression: ({followsNewline, followsWhitespace, preserveWhitespace}) ->
     if followsNewline and match = JSX_ELEMENT_INDENTED_EQUALS_EXPRESSION_START.exec(@chunk)
       @token '{', '=', 0, 0
       @consumeChunk match[0].length
@@ -670,12 +701,15 @@ exports.Lexer = class Lexer
       @token '}', '}', 0, 0, ['', 'end of equals expression', close[2]]
       return {}
 
-    if match = JSX_ELEMENT_INDENTED_EXPRESSION_START.exec(@chunk)
+    if match = (if preserveWhitespace then JSX_ELEMENT_INLINE_EXPRESSION_START else JSX_ELEMENT_INDENTED_EXPRESSION_START).exec(@chunk)
       endOfExpressionOffset = @offsetOfNextOutdent(yes)
 
       # consume but don't record line token(s)
       if match = WHITESPACE_INCLUDING_NEWLINES.exec(@chunk)
+        leadingWhitespace = yes
         @consumeChunk match[0].length
+      else if followsWhitespace
+        leadingWhitespace = yes
 
       [line, column] = @getLineAndColumnFromChunk 0
       {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on, initialIndent: @indent}
@@ -685,8 +719,14 @@ exports.Lexer = class Lexer
 
       @jsxForceExpression({nested, inset: 1})
 
-      [..., close] = nested
+      [open, ..., close] = nested
       close.origin = ['', 'end of indented expression', close[2]]
+      unless followsNewline
+        open[0] =
+          if leadingWhitespace
+            'JSX_INLINE_EXPRESSION_START'
+          else
+            'JSX_IMMEDIATE_INLINE_EXPRESSION_START'
 
       @tokens.push nested...
       @consumeChunk index
@@ -703,17 +743,24 @@ exports.Lexer = class Lexer
     nested.splice nested.length - inset, 0,
       @makeToken ')', ')', 0, 0
 
-  matchJsxElementIndentedContentLine: ({untilEndTag}) ->
-    regex =
-      if untilEndTag
-        /// ^ \s* ( (?: [^\n\{<] | <(?!/#{untilEndTag}>) )* ) ///
-      else
-        JSX_ELEMENT_INDENTED_CONTENT_LINE
-    [match, content] = regex.exec(@chunk)
+  matchJsxElementIndentedContentLine: ({preserveWhitespace, followsNewline}) ->
+    [match, content] = JSX_ELEMENT_INDENTED_CONTENT_LINE.exec(@chunk)
     return {} unless match.length
-    @token 'JSX_ELEMENT_CONTENT', content.trim(), 0, match.length if NON_WHITESPACE.exec(match)
+    trailingWhitespace = TRAILING_SPACES.exec match
+    if preserveWhitespace or not followsNewline
+      content = match
+    else
+      content = content.trim()
+    @token(
+      if followsNewline
+        'JSX_ELEMENT_CONTENT'
+      else
+        'JSX_ELEMENT_INLINE_CONTENT'
+      content, 0, match.length
+    ) if NON_WHITESPACE.exec(match) or match.length and preserveWhitespace
+
     @consumeChunk match.length
-    {}
+    {trailingWhitespace}
 
   # Matches and consumes comments.
   commentToken: ->
@@ -1502,11 +1549,11 @@ JSX_CLASS_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \.) (?: (\() | ([a-zA-Z][a-z
 JSX_ELEMENT_IMMEDIATE_CLOSERS = /// ^ (?: \, | \} | \) | \] | for\s | unless\s | if\s ) ///
 JSX_ELEMENT_INLINE_EQUALS_EXPRESSION = /// ^ (= \s*) ([^\n]+) ///
 JSX_ELEMENT_INLINE_BODY_START = /// ^ [^\n] ///
-JSX_ELEMENT_INLINE_CONTENT = /// ^ [^\n\{]+ ///
+JSX_ELEMENT_INLINE_CONTENT = /// ^ [^\n\{<]+ ///
 JSX_ELEMENT_INLINE_EXPRESSION_START = /// ^ \{ ///
 JSX_ELEMENT_INDENTED_EQUALS_EXPRESSION_START = /// ^ \s* = ///
 JSX_ELEMENT_INDENTED_EXPRESSION_START = /// ^ \s* { ///
-JSX_ELEMENT_INDENTED_CONTENT_LINE = /// ^ \s* ([^\n\{]*) ///
+JSX_ELEMENT_INDENTED_CONTENT_LINE = /// ^ \s* ([^\n\{<]*) ///
 JSX_PARENTHESIZED_ATTRIBUTES_START = /// ^ \( ///
 JSX_PARENTHESIZED_ATTRIBUTES_END   = /// ^ \) ///
 JSX_PARENTHESIZED_ATTRIBUTE = ///
