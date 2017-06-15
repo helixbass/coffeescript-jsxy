@@ -477,6 +477,8 @@ BALANCED_PAIRS = [
   ['(', ')']
   ['[', ']']
   ['{', '}']
+  ['JSX_INLINE_EXPRESSION_START', '}']
+  ['JSX_IMMEDIATE_INLINE_EXPRESSION_START', '}']
   ['INDENT', 'OUTDENT'],
   ['CALL_START', 'CALL_END']
   ['PARAM_START', 'PARAM_END']
