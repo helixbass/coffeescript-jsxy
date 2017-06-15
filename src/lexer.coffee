@@ -681,7 +681,7 @@ exports.Lexer = class Lexer
       @consumeChunk match[0].length
 
       if inline = JSX_INLINE_INDICATOR.exec @chunk
-        open[0] = 'JSX_INLINE_EXPRESSION_START'
+        open[0] = 'JSX_INLINE_BOTH_EXPRESSION_START'
         @consumeChunk inline[0].length
 
       endOfExpressionOffset = @offsetOfNextOutdent()
