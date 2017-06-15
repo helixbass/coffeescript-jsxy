@@ -983,8 +983,7 @@ exports.JsxElement = class JsxElement extends Base
 
   constructor: (options) ->
     super()
-
-    {@name, children: @children_ = [], @attributes = {}, @shorthands = {}} = options
+    {@name, children: @children_ = [], @attributes = {}, @shorthands = {}, @inline} = options
     @inlineTagBody = @children_.inlineBody
     @attributes.list   ?= []
     @shorthands.classes ?= []
