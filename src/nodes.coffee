@@ -1059,6 +1059,8 @@ exports.JsxElement = class JsxElement extends Base
                     ''
                   else
                     ' '
+                else if index and @children_[index - 1].inline is 'both'
+                  ' '
                 else
                   "\n#{idt}"
               )
