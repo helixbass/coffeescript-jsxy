@@ -19,3 +19,13 @@ exports.arrayEq = (a, b, msg) -> ok arrayEgal(a,b), msg or "Expected #{a} to dee
 exports.toJS = (str) ->
   CoffeeScript.compile str, bare: yes
   .replace /^\s+|\s+$/g, '' # Trim leading/trailing whitespace
+
+exports.eqJS = (input, expectedOutput, msg) ->
+  actualOutput = CoffeeScript.compile input, bare: yes
+  .replace /^\s+|\s+$/g, '' # Trim leading/trailing whitespace
+
+  ok egal(expectedOutput, actualOutput), msg or
+  """Expected generated JavaScript to be:
+  #{expectedOutput}
+    but instead was
+  #{actualOutput}"""

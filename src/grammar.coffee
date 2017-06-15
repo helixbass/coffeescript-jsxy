@@ -486,8 +486,8 @@ grammar =
   ]
 
   JsxTagChildren: [
-    o 'JsxElementChildren'
-    o 'INDENT JsxElementChildren OUTDENT',            -> $2
+    o 'JsxElementChildren',                -> $1.inlineBody = yes; $1
+    o 'INDENT JsxElementChildren OUTDENT', -> $2
   ]
 
   JsxHamlElement: [
@@ -577,9 +577,16 @@ grammar =
 
   JsxElementChild: [
     o 'JSX_ELEMENT_CONTENT',           -> $1
+    o 'JSX_ELEMENT_INLINE_CONTENT',    -> new JsxInlineContent $1
     o 'JsxElement',                    -> $1
+    o 'JSX_INLINE_ELEMENT JsxElement', -> $2.inline = yes; $2
+    o 'JSX_IMMEDIATE_INLINE_ELEMENT JsxElement', -> $2.inline = 'IMMEDIATE'; $2
     o '{ Expression }',                -> $2
+    o 'JSX_INLINE_EXPRESSION_START Expression }', -> $2.inline = yes; $2
+    o 'JSX_IMMEDIATE_INLINE_EXPRESSION_START Expression }', -> $2.inline = 'IMMEDIATE'; $2
     o '{ INDENT Expression OUTDENT }', -> $3
+    o 'JSX_INLINE_EXPRESSION_START INDENT Expression OUTDENT }', -> $3.inline = yes; $3
+    o 'JSX_IMMEDIATE_INLINE_EXPRESSION_START INDENT Expression OUTDENT }', -> $3.inline = 'IMMEDIATE'; $3
   ]
 
   # Array slice literals.

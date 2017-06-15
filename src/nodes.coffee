@@ -875,6 +875,7 @@ exports.JsxElement = class JsxElement extends Base
 
   constructor: (options) ->
     {@name, children: @children_ = [], @attributes = {}, @shorthands = {}} = options
+    @inlineTagBody = @children_.inlineBody
     @attributes.list   ?= []
     @shorthands.classes ?= []
 
@@ -939,11 +940,23 @@ exports.JsxElement = class JsxElement extends Base
       idt = o.indent += TAB
       compiled =
         flatten(
-          for child in @children_
+          for child, index in @children_
             [
-              @makeCode "\n#{idt}"
+              @makeCode(
+                if @inlineTagBody
+                  ''
+                else if child.inline and index
+                  if child.inline is 'IMMEDIATE'
+                    ''
+                  else
+                    ' '
+                else
+                  "\n#{idt}"
+              )
               (if isString child # content
                 [@makeCode child]
+              else if child instanceof JsxInlineContent
+                [@makeCode child.str]
               else if child instanceof JsxElement
                 child.compileToFragments(o)
               else # expression
@@ -959,17 +972,22 @@ exports.JsxElement = class JsxElement extends Base
 
     idt = initialIndent
     endTag = [
-      @makeCode "\n#{idt}"
       @makeCode '</'
       @makeCode @name
       @makeCode '>'
     ]
+    endTag.unshift @makeCode "\n#{idt}" if @children_.length and not @inlineTagBody
 
     [
       startTag...
       compiledChildren...
       endTag...
     ]
+
+exports.JsxInlineContent = class JsxInlineContent extends Base
+
+  constructor: (@str) ->
+    @inline = 'IMMEDIATE'
 
 # A range literal. Ranges can be used to extract portions (slices) of arrays,
 # to specify a range for comprehensions, or as a value, to be expanded into the
