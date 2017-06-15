@@ -387,7 +387,14 @@ exports.Lexer = class Lexer
     matchedParenthesizedAttributes = @matchJsxParenthesizedAttributes()
     @matchJsxObjectAttributes()
     @matchJsxParenthesizedAttributes() unless matchedParenthesizedAttributes # could be before/after object-style attributes
+    @matchJsxInlineIndicator()
     {elementName}
+
+  matchJsxInlineIndicator: ->
+    return unless match = JSX_INLINE_INDICATOR.exec @chunk
+    [indicator] = match
+    @token 'JSX_INLINE_INDICATOR', indicator
+    @consumeChunk indicator.length
 
   matchJsxHamlShorthands: (opts = {}) ->
     {allowLeadingDotClass, allowLeadingWhitespace, addImplicitElementName} = opts
@@ -1498,6 +1505,7 @@ JSX_ID_SHORTHAND =                    /// ^     (\#) ([a-zA-Z][a-zA-Z_0-9\-]*) /
 JSX_ID_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \#) ([a-zA-Z][a-zA-Z_0-9\-]*) ///
 JSX_CLASS_SHORTHAND =                    /// ^     (\.) (?: (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
 JSX_CLASS_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \.) (?: (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
+JSX_INLINE_INDICATOR = /// ^ \^ ///
 JSX_ELEMENT_IMMEDIATE_CLOSERS = /// ^ (?: \, | \} | \) | \] | for\s | unless\s | if\s ) ///
 JSX_ELEMENT_INLINE_EQUALS_EXPRESSION = /// ^ (= \s*) ([^\n]+) ///
 JSX_ELEMENT_INLINE_BODY_START = /// ^ [^\n] ///

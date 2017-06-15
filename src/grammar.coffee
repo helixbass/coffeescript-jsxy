@@ -492,13 +492,21 @@ grammar =
 
   JsxHamlElement: [
     o 'JSX_ELEMENT_NAME',                                                                               -> new JsxElement name: $1
+    o 'JSX_ELEMENT_NAME JSX_INLINE_INDICATOR',                                                          -> new JsxElement name: $1, inline: yes
     o 'JSX_ELEMENT_NAME JsxElementShorthands',                                                          -> new JsxElement name: $1, shorthands: $2
+    o 'JSX_ELEMENT_NAME JsxElementShorthands JSX_INLINE_INDICATOR',                                     -> new JsxElement name: $1, shorthands: $2, inline: yes
     o 'JSX_ELEMENT_NAME JsxAttributes',                                                                 -> new JsxElement name: $1, attributes: $2
+    o 'JSX_ELEMENT_NAME JsxAttributes JSX_INLINE_INDICATOR',                                            -> new JsxElement name: $1, attributes: $2, inline: yes
     o 'JSX_ELEMENT_NAME JsxElementShorthands JsxAttributes',                                            -> new JsxElement name: $1, shorthands: $2, attributes: $3
+    o 'JSX_ELEMENT_NAME JsxElementShorthands JsxAttributes JSX_INLINE_INDICATOR',                       -> new JsxElement name: $1, shorthands: $2, attributes: $3, inline: yes
     o 'JSX_ELEMENT_NAME JsxAttributes JSX_ELEMENT_BODY_START JsxElementChildren_',                      -> new JsxElement name: $1, attributes: $2, children: $4
+    o 'JSX_ELEMENT_NAME JsxAttributes JSX_INLINE_INDICATOR JSX_ELEMENT_BODY_START JsxElementChildren_', -> new JsxElement name: $1, attributes: $2, children: $5, inline: yes
     o 'JSX_ELEMENT_NAME JsxElementShorthands JsxAttributes JSX_ELEMENT_BODY_START JsxElementChildren_', -> new JsxElement name: $1, shorthands: $2, attributes: $3, children: $5
+    o 'JSX_ELEMENT_NAME JsxElementShorthands JsxAttributes JSX_INLINE_INDICATOR JSX_ELEMENT_BODY_START JsxElementChildren_', -> new JsxElement name: $1, shorthands: $2, attributes: $3, children: $6, inline: yes
     o 'JSX_ELEMENT_NAME JSX_ELEMENT_BODY_START JsxElementChildren_',                                    -> new JsxElement name: $1, children: $3
+    o 'JSX_ELEMENT_NAME JSX_INLINE_INDICATOR JSX_ELEMENT_BODY_START JsxElementChildren_',               -> new JsxElement name: $1, children: $4, inline: yes
     o 'JSX_ELEMENT_NAME JsxElementShorthands JSX_ELEMENT_BODY_START JsxElementChildren_',               -> new JsxElement name: $1, shorthands: $2, children: $4
+    o 'JSX_ELEMENT_NAME JsxElementShorthands JSX_INLINE_INDICATOR JSX_ELEMENT_BODY_START JsxElementChildren_', -> new JsxElement name: $1, shorthands: $2, children: $5, inline: yes
   ]
 
   JsxElementShorthands: [
