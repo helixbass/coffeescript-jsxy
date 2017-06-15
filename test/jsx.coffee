@@ -689,6 +689,14 @@ test 'whitespace', ->
         Hello
         %b^= name
         =^ abc
+      %a
+        b
+        %c^
+        d
+      %a
+        b
+        =^ c
+        d
     '''
     '''
     <a> a{b} c {d} </a>;
@@ -752,6 +760,14 @@ test 'whitespace', ->
         {name}
       </b> {abc}
     </div>;
+
+    <a>
+      b <c></c> d
+    </a>;
+
+    <a>
+      b {c} d
+    </a>;
     '''
   )
 
