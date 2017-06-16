@@ -113,6 +113,7 @@ grammar =
   Expression: [
     o 'Value'
     o 'Invocation'
+    o 'JsxFilter'
     o 'Code'
     o 'Operation'
     o 'Assign'
@@ -438,6 +439,20 @@ grammar =
     o 'Value OptFuncExist Arguments',           -> new Call $1, $3, $2
     o 'Invocation OptFuncExist Arguments',      -> new Call $1, $3, $2
     o 'SUPER OptFuncExist Arguments',           -> new SuperCall LOC(1)(new Super), $3, $2
+  ]
+
+  JsxFilter: [
+    o 'Expression JSX_FILTER SimpleAssignable',                    -> new Call $3, [$1]
+    o 'Expression JSX_FILTER SimpleAssignable JsxFilterAddtlArgs', -> new Call $3, [$1].concat $4
+  ]
+
+  JsxFilterAddtlArgs: [
+    o 'JsxFilterAddtlArgs JsxFilterAddtlArg', -> $1.concat $2
+    o 'JsxFilterAddtlArg',                    -> [$1]
+  ]
+
+  JsxFilterAddtlArg: [
+    o 'JSX_FILTER_ADDTL_ARG Expression', -> $2
   ]
 
   # An optional existence check on a function.
@@ -863,6 +878,8 @@ operators = [
   ['left',      '&&']
   ['left',      '||']
   ['left',      'BIN?']
+  ['left',      'JSX_FILTER_ADDTL_ARG']
+  ['left',      'JSX_FILTER']
   ['nonassoc',  'INDENT', 'OUTDENT']
   ['right',     'YIELD']
   ['right',     '=', ':', 'COMPOUND_ASSIGN', 'RETURN', 'THROW', 'EXTENDS']

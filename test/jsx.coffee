@@ -771,6 +771,24 @@ test 'whitespace', ->
     '''
   )
 
+test 'filter', ->
+  eqJS(
+    '''
+    %a= amount | currency
+    %a
+      {a | b ~ c ~ d | e}
+    '''
+    '''
+    <a>
+      {currency(amount)}
+    </a>;
+
+    <a>
+      {e(b(a, c, d))}
+    </a>;
+    '''
+  )
+
 # TODO:
 # errors on stray <
 # error tests:
