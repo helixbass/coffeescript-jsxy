@@ -48,6 +48,7 @@ exports.Lexer = class Lexer
     @seenExport = no             # Used to recognize EXPORT FROM? AS? tokens.
     @importSpecifierList = no    # Used to identify when in an IMPORT {...} FROM? ...
     @exportSpecifierList = no    # Used to identify when in an EXPORT {...} FROM? ...
+    @inJsxExpression = opts.inJsxExpression
 
     @chunkLine =
       opts.line or 0             # The start line for the current @chunk.
@@ -494,7 +495,7 @@ exports.Lexer = class Lexer
       @consumeChunk equals.length
 
       [line, column] = @getLineAndColumnFromChunk 0
-      nested = new Lexer().tokenize expression, {line, column}
+      nested = new Lexer().tokenize expression, {line, column, inJsxExpression: yes}
 
       # Remove leading 'TERMINATOR' (if any).
       nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
@@ -530,7 +531,7 @@ exports.Lexer = class Lexer
         startBody() unless alreadyStarted
         endOfExpressionOffset = @offsetOfNextOutdent(yes)
         [line, column] = @getLineAndColumnFromChunk 0
-        {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on}
+        {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on, inJsxExpression: yes}
 
         # Remove leading 'TERMINATOR' (if any).
         nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
@@ -698,7 +699,7 @@ exports.Lexer = class Lexer
 
       endOfExpressionOffset = @offsetOfNextOutdent()
       [line, column] = @getLineAndColumnFromChunk 0
-      nested = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column}
+      nested = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, inJsxExpression: yes}
 
       # Remove leading 'TERMINATOR' (if any).
       nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
@@ -723,7 +724,7 @@ exports.Lexer = class Lexer
         leadingWhitespace = yes
 
       [line, column] = @getLineAndColumnFromChunk 0
-      {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on, initialIndent: @indent}
+      {tokens: nested, index} = new Lexer().tokenize @chunk[...endOfExpressionOffset], {line, column, untilBalanced: on, initialIndent: @indent, inJsxExpression: yes}
 
       # Remove leading 'TERMINATOR' (if any).
       nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
@@ -1021,6 +1022,10 @@ exports.Lexer = class Lexer
       tag = 'TERMINATOR'
     else if value is '*' and prev[0] is 'EXPORT'
       tag = 'EXPORT_ALL'
+    else if value is '|' and @inJsxExpression
+      tag = 'JSX_FILTER'
+    else if value is '~' and @inJsxExpression
+      tag = 'JSX_FILTER_ADDTL_ARG'
     else if value in MATH            then tag = 'MATH'
     else if value in COMPARE         then tag = 'COMPARE'
     else if value in COMPOUND_ASSIGN then tag = 'COMPOUND_ASSIGN'
