@@ -1468,6 +1468,10 @@ exports.Class = class Class extends Base
       # Anonymous classes are only valid in expressions
       node = new Parens node
 
+    if @boundMethods.length and @parent
+      @variable ?= new IdentifierLiteral o.scope.freeVariable '_class'
+      [@variable, @variableRef] = @variable.cache o unless @variableRef?
+
     if @variable
       node = new Assign @variable, node, null, { @moduleDeclaration }
 
@@ -1481,7 +1485,7 @@ exports.Class = class Class extends Base
     @ctor ?= @makeDefaultConstructor() if @externalCtor or @boundMethods.length
     @ctor?.noReturn = true
 
-    @proxyBoundMethods o if @boundMethods.length
+    @proxyBoundMethods() if @boundMethods.length
 
     o.indent += TAB
 
@@ -1580,9 +1584,7 @@ exports.Class = class Class extends Base
       else if method.isStatic and method.bound
         method.context = @name
       else if method.bound
-        @boundMethods.push method.name
-        @setParentRef(o)
-        method.parentClass = @parent
+        @boundMethods.push method
 
     if initializer.length isnt expressions.length
       @body.expressions = (expression.hoist() for expression in initializer)
@@ -1639,9 +1641,11 @@ exports.Class = class Class extends Base
 
     ctor
 
-  proxyBoundMethods: (o) ->
-    @ctor.thisAssignments = for name in @boundMethods by -1
-      name = new Value(new ThisLiteral, [ name ])
+  proxyBoundMethods: ->
+    @ctor.thisAssignments = for method in @boundMethods
+      method.classVariable = @variableRef if @parent
+
+      name = new Value(new ThisLiteral, [ method.name ])
       new Assign name, new Call(new Value(name, [new Access new PropertyName 'bind']), [new ThisLiteral])
 
     null
@@ -2445,9 +2449,9 @@ exports.Code = class Code extends Base
     wasEmpty = @body.isEmpty()
     @body.expressions.unshift thisAssignments... unless @expandCtorSuper thisAssignments
     @body.expressions.unshift exprs...
-    if @isMethod and @bound and not @isStatic and @parentClass
+    if @isMethod and @bound and not @isStatic and @classVariable
       boundMethodCheck = new Value new Literal utility 'boundMethodCheck', o
-      @body.expressions.unshift new Call(boundMethodCheck, [new Value(new ThisLiteral), @parentClass])
+      @body.expressions.unshift new Call(boundMethodCheck, [new Value(new ThisLiteral), @classVariable])
     @body.makeReturn() unless wasEmpty or @noReturn
 
     # Assemble the output
