@@ -1251,14 +1251,15 @@ exports.Obj = class Obj extends Base
     yes
 
   shouldCache: ->
-    # @hasSplat() in condition is needed to properly process object spread properties
-    # in function parameters, and can be removed once the proposal hits Stage 4.
-    # Example: foo({a, b, r...}) => foo(arg) { ({a,b} = arg), r = ... }
+    # `@hasSplat()` in condition is needed to properly process object spread
+    # properties in function parameters, and can be removed once the proposal
+    # hits Stage 4.
+    # Example: `foo({a, b, r...}) => foo(arg) { ({a,b} = arg), r = ... }`
     not @isAssignable() or @hasSplat()
 
-  # Check if object contains splat. 
+  # Check if object contains splat.
   hasSplat: ->
-    splat = yes for prop in @properties when prop instanceof Splat 
+    splat = yes for prop in @properties when prop instanceof Splat
     splat ? no
 
   compileNode: (o) ->
@@ -1266,11 +1267,11 @@ exports.Obj = class Obj extends Base
     if @generated
       for node in props when node instanceof Value
         node.error 'cannot have an implicit value in an implicit object'
-    
+
     # Object spread properties. https://github.com/tc39/proposal-object-rest-spread/blob/master/Spread.md
-    # obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})
+    # `obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})`
     return @compileSpread o if @hasSplat()
-    
+
     idt        = o.indent += TAB
     lastNoncom = @lastNonComment @properties
 
@@ -1302,7 +1303,7 @@ exports.Obj = class Obj extends Base
       else
         ',\n'
       indent = if isCompact or prop instanceof Comment then '' else idt
-      
+
       key = if prop instanceof Assign and prop.context is 'object'
         prop.variable
       else if prop instanceof Assign
@@ -1339,15 +1340,15 @@ exports.Obj = class Obj extends Base
       prop.eachName iterator if prop.eachName?
 
   # Object spread properties. https://github.com/tc39/proposal-object-rest-spread/blob/master/Spread.md
-  # obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})
+  # `obj2 = {a:1, obj..., c:3, d:4} => obj2 = Object.assign({}, {a:1}, obj1, {c:3, d:4})`
   compileSpread: (o) ->
     props = @properties
     # Store object spreads.
     splatSlice = []
     propSlices = []
     slices = []
-    addSlice = -> 
-      slices.push new Obj propSlices if propSlices.length      
+    addSlice = ->
+      slices.push new Obj propSlices if propSlices.length
       slices.push splatSlice... if splatSlice.length
       splatSlice = []
       propSlices = []
@@ -1949,7 +1950,7 @@ exports.Assign = class Assign extends Base
     if isValue
       # When compiling `@variable`, remember if it is part of a function parameter.
       @variable.param = @param
-      
+
       # If `@variable` is an array or an object, we’re destructuring;
       # if it’s also `isAssignable()`, the destructuring syntax is supported
       # in ES and we can output it as is; otherwise we `@compileDestructuring`
@@ -2013,25 +2014,27 @@ exports.Assign = class Assign extends Base
   # can be removed once ES proposal hits Stage 4.
   compileObjectDestruct: (o) ->
     # Per https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#Assignment_without_declaration,
-    # if we’re destructuring without declaring, the destructuring assignment must be wrapped in parentheses.
-    # ({a, b} = obj)
-    # Helper function setScopeVar() declares vars 'a' and 'b' at the top of the current scope.
+    # if we’re destructuring without declaring, the destructuring assignment
+    # must be wrapped in parentheses: `({a, b} = obj)`. Helper function
+    # `setScopeVar()` declares variables `a` and `b` at the top of the
+    # current scope.
     setScopeVar = (prop) ->
       newVar = false
       return if prop instanceof Assign and prop.value.base instanceof Obj
       if prop instanceof Assign
         if prop.value.base instanceof IdentifierLiteral
           newVar = prop.value.base.compile o
-        else 
+        else
           newVar = prop.variable.base.compile o
       else
         newVar = prop.compile o
       o.scope.add(newVar, 'var', true) if newVar
-    # Helper function getPropValue() returns compiled object property value.
-    # These values are then passed as an argument to helper function objectWithoutKeys 
-    # which is used to assign object value to the destructuring rest variable.
+    # Helper function `getPropValue()` returns compiled object property value.
+    # These values are then passed as an argument to helper function
+    # `objectWithoutKeys` which is used to assign object value to the
+    # destructuring rest variable.
     getPropValue = (prop, quote = no) ->
-      wrapInQutes = (prop) -> 
+      wrapInQutes = (prop) ->
         compiledProp = prop.compile o
         compiledProp = "'#{compiledProp}'" if quote
         (new Literal compiledProp).compile o
@@ -2042,21 +2045,21 @@ exports.Assign = class Assign extends Base
       else
         return wrapInQutes prop
     # Recursive function for searching and storing rest elements in objects.
-    # Parameter props[] is used to store nested object properties,
+    # Parameter `props[]` is used to store nested object properties,
     # e.g. `{a: {b, c: {d, r1...}, r2...}, r3...} = obj`.
     traverseRest = (properties, path = []) ->
       results = []
       restElement = no
       for prop, key in properties
-        if prop instanceof Assign and prop.value.base instanceof Obj          
+        if prop instanceof Assign and prop.value.base instanceof Obj
           results = traverseRest prop.value.base.objects, [path..., getPropValue prop]
         if prop instanceof Splat
           prop.error "multiple rest elements are disallowed in object destructuring" if restElement
           restKey = key
-          restElement = { 
-            name: prop.unwrap(), 
+          restElement = {
+            name: prop.unwrap(),
             path
-          }  
+          }
       if restElement
         # Remove rest element from the properties.
         properties.splice restKey, 1
@@ -2068,10 +2071,10 @@ exports.Assign = class Assign extends Base
     {properties} = @variable.base
     # Find all rest elements.
     restList = traverseRest properties
-    val = @value.compileToFragments o, LEVEL_LIST  
+    val = @value.compileToFragments o, LEVEL_LIST
     vvarText = fragmentsToText val
-    # Make value into a simple variable if it isn't already.
-    if (@value.unwrap() not instanceof IdentifierLiteral) or @variable.assigns vvarText 
+    # Make value into a simple variable if it isn’t already.
+    if (@value.unwrap() not instanceof IdentifierLiteral) or @variable.assigns vvarText
       ref = o.scope.freeVariable 'obj'
       fragments.push [@makeCode(ref + ' = '), val...]
       val = (new IdentifierLiteral ref).compileToFragments o, LEVEL_TOP
@@ -2149,7 +2152,7 @@ exports.Assign = class Assign extends Base
 
     # At this point, there are several things to destructure. So the `fn()` in
     # `{a, b} = fn()` must be cached, for example. Make vvar into a simple
-    # variable if it isn't already.
+    # variable if it isn’t already.
     if value.unwrap() not instanceof IdentifierLiteral or @variable.assigns(vvarText)
       ref = o.scope.freeVariable 'ref'
       assigns.push [@makeCode(ref + ' = '), vvar...]
@@ -2346,7 +2349,7 @@ exports.Code = class Code extends Base
         target = new IdentifierLiteral o.scope.freeVariable name
         param.renameParam node, target
         thisAssignments.push new Assign node, target
-        
+
     # Parse the parameters, adding them to the list of parameters to put in the
     # function definition; and dealing with splats or expansions, including
     # adding expressions to the function body to declare all parameter
@@ -2417,7 +2420,7 @@ exports.Code = class Code extends Base
             else
               ref = param
           # Add this parameter’s reference(s) to the function scope.
-          if param.name instanceof Arr or param.name instanceof Obj
+          if (param.name instanceof Arr or param.name instanceof Obj) and not param.shouldCache()
             # This parameter is destructured.
             param.name.lhs = yes
             param.name.eachName (prop) ->
@@ -2569,7 +2572,9 @@ exports.Param = class Param extends Base
       name = "_#{name}" if name in JS_FORBIDDEN
       node = new IdentifierLiteral o.scope.freeVariable name
     else if node.shouldCache() or node.lhs
-      # node.lhs is checked in case we have object destructuring as function parameter. Can be removed once ES proposal for object spread hots Stage 4.
+      # `node.lhs` is checked in case we have object destructuring as a
+      # function parameter. Can be removed once ES proposal for object spread
+      # reaches Stage 4.
       node = new IdentifierLiteral o.scope.freeVariable 'arg'
     node = new Value node
     node.updateLocationDataIfMissing @locationData
@@ -3410,6 +3415,13 @@ exports.If = class If extends Base
 
 UTILITIES =
   modulo: -> 'function(a, b) { return (+a % (b = +b) + b) % b; }'
+  objectWithoutKeys: -> "
+      function(o, ks) {
+        var res = {};
+        for (var k in o) ([].indexOf.call(ks, k) < 0 && {}.hasOwnProperty.call(o, k)) && (res[k] = o[k]);
+        return res;
+      }
+    "
   boundMethodCheck: -> "
     function(instance, Constructor) {
       if (!(instance instanceof Constructor)) {
@@ -3417,19 +3429,13 @@ UTILITIES =
       }
     }
   "
-  # objectWithoutKeys: -> 'function(obj, props) { return Object.keys(obj).reduce(function(a,c) { return (![].includes.call(props, c)) && (a[c] = obj[c]), a; }, {}); }'
-  objectWithoutKeys: -> "
-      function(o, ks) {
-        var res = {};
-        for (var k in o) ([].indexOf.call(ks, k) < 0 && {}.hasOwnProperty.call(o, k)) && (res[k] = o[k]);
-        return res;
-      }"
+
   # Shortcuts to speed up the lookup time for native functions.
   hasProp: -> '{}.hasOwnProperty'
   indexOf: -> '[].indexOf'
   slice  : -> '[].slice'
   splice : -> '[].splice'
-  
+
 
 # Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.
