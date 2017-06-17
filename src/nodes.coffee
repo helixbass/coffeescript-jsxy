@@ -1251,11 +1251,7 @@ exports.Obj = class Obj extends Base
     yes
 
   shouldCache: ->
-    # `@hasSplat()` in condition is needed to properly process object spread
-    # properties in function parameters, and can be removed once the proposal
-    # hits Stage 4.
-    # Example: `foo({a, b, r...}) => foo(arg) { ({a,b} = arg), r = ... }`
-    not @isAssignable() or @hasSplat()
+    not @isAssignable()
 
   # Check if object contains splat.
   hasSplat: ->
@@ -2038,7 +2034,6 @@ exports.Assign = class Assign extends Base
         compiledProp = prop.compile o
         compiledProp = "'#{compiledProp}'" if quote
         (new Literal compiledProp).compile o
-      setScopeVar prop # Declare a variable in the scope.
       if prop instanceof Assign
         return prop.variable.compile o if prop.variable.base instanceof StringWithInterpolations or prop.variable.base instanceof StringLiteral
         return wrapInQutes prop.variable
@@ -2053,6 +2048,8 @@ exports.Assign = class Assign extends Base
       for prop, key in properties
         if prop instanceof Assign and prop.value.base instanceof Obj
           results = traverseRest prop.value.base.objects, [path..., getPropValue prop]
+        else
+          setScopeVar prop.unwrap() # Declare a variable in the scope.
         if prop instanceof Splat
           prop.error "multiple rest elements are disallowed in object destructuring" if restElement
           restKey = key
@@ -2086,8 +2083,6 @@ exports.Assign = class Assign extends Base
       varProp = if restElement.path.length then ".#{restElement.path.join '.'}" else ""
       vvarPropText = new Literal "#{vvarText}#{varProp}"
       extractKeys = new Call new Value(new Literal(utility('objectWithoutKeys', o))), [vvarPropText, restElement.excludeProps]
-      # Force declare var in current scope in case object destructuring is function argument.
-      o.scope.add restElement.name.compile(o), 'var'
       fragments.push new Assign(restElement.name, extractKeys, null).compileToFragments o, LEVEL_LIST
     @joinFragmentArrays fragments, ", "
 
@@ -2427,6 +2422,16 @@ exports.Code = class Code extends Base
             param.name.lhs = yes
             param.name.eachName (prop) ->
               o.scope.parameter prop.value
+            # Compile foo({a, b...}) -> to foo(arg) -> {a, b...} = arg
+            # Can be removed once ES proposal hits Stage 4.
+            if param.name instanceof Obj and param.name.hasSplat()
+              splatParamName = o.scope.freeVariable 'arg'
+              o.scope.parameter splatParamName
+              ref = new Value new IdentifierLiteral splatParamName
+              exprs.push new Assign new Value(param.name), ref, null, param: yes
+              # Compile foo({a, b...} = {}) -> to foo(arg = {}) -> {a, b...} = arg
+              if param.value?  and not param.assignedInBody
+                ref = new Assign ref, param.value, null, param: yes
           else
             o.scope.parameter fragmentsToText (if param.value? then param else ref).compileToFragments o
           params.push ref
@@ -2574,7 +2579,7 @@ exports.Param = class Param extends Base
       name = "_#{name}" if name in JS_FORBIDDEN
       node = new IdentifierLiteral o.scope.freeVariable name
     else if node.shouldCache()
-      node = new IdentifierLiteral o.scope.freeVariable 'arg', {reserve: no}
+      node = new IdentifierLiteral o.scope.freeVariable 'arg'
     node = new Value node
     node.updateLocationDataIfMissing @locationData
     @reference = node
