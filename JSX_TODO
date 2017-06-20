@@ -6,7 +6,6 @@
     x
 - refine attribute error reporting so that eg %h1( x=[abc] ) will specifically tell you the attribute value is what's wrong
 - refactor attribute value nested lexing to share code with matchWithInterpolations()
-- spacing in element children?
 - compile empty element to eg <a /> instead of <a></a>? is there a semantic difference to JSX and/or HTML?
 - className and other attribute-name translations (automatically camelCase, that's what JSX wants?)
 - allow normal Coffeescript (line) comments inside (indented) element body
@@ -22,9 +21,6 @@
       %abc
     else
       %def
-- allow/parse inline tag after content? eg
-  %h1
-    hello<span class={@abc}>World</span>
 - allow combination of interpreted/literal classNames? eg %h1.abc.( xyz: def ) => <h1 className={classNames('abc', {xyz: def})}
 - allow haml-style self-closing tag syntax? eg %hr/
-- support angular-style text filter syntax inside {} and/or = expressions? eg = amount | currency
+- get for loops that reference @ (inside a JSX expression) to generate properly bound functions
