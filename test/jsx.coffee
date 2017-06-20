@@ -796,9 +796,24 @@ test 'filter', ->
     '''
   )
 
+test 'data-attribute', ->
+  eqJS(
+    '''
+    %a{ 'data-id': 1 }
+    '''
+    '''
+    <a data-id={1}></a>;
+    '''
+  )
+
 # TODO:
 # errors on stray <
 # error tests:
 # - no whitespace before element body
 # - outdented end tag, expression }, ...
 # - mismatched start/end tag
+# - handle:
+#   x =
+#     %a
+#
+#   .leadingDotClass

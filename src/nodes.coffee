@@ -413,6 +413,11 @@ exports.NaNLiteral = class NaNLiteral extends NumberLiteral
     if o.level >= LEVEL_OP then @wrapInBraces code else code
 
 exports.StringLiteral = class StringLiteral extends Literal
+  compileNode: (o) ->
+    if @jsxAttributeName then [@makeCode @unquote()] else super()
+
+  unquote: ->
+    @value[1...-1]
 
 exports.RegexLiteral = class RegexLiteral extends Literal
 
@@ -581,6 +586,7 @@ exports.Value = class Value extends Base
   # evaluate anything twice when building the soak chain.
   compileNode: (o) ->
     @base.front = @front
+    @base.jsxAttributeName = @jsxAttributeName
     props = @properties
     fragments = @base.compileToFragments o, (if props.length then LEVEL_ACCESS else null)
     if props.length and SIMPLENUM.test fragmentsToText fragments
@@ -1601,6 +1607,7 @@ exports.Assign = class Assign extends Base
     val = @value.compileToFragments o, LEVEL_LIST
     val = [@makeCode('{'), val..., @makeCode('}')] if @jsxAttribute
     @variable.front = true if isValue and @variable.base instanceof Obj
+    @variable.jsxAttributeName = yes if @jsxAttribute
     compiledName = @variable.compileToFragments o, LEVEL_LIST
 
     if @context is 'object'
