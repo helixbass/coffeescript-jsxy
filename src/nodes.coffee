@@ -441,6 +441,7 @@ exports.Block = class Block extends Base
   # It would be better not to generate them in the first place, but for now,
   # clean up obvious double-parentheses.
   compileRoot: (o) ->
+    @generateJsxImports o if o.containsJsx
     o.indent  = if o.bare then '' else TAB
     o.level   = LEVEL_TOP
     @spaced   = yes
@@ -448,8 +449,6 @@ exports.Block = class Block extends Base
     # Mark given local variables in the root scope as parameters so they don't
     # end up being declared on this block.
     o.scope.parameter name for name in o.locals or []
-    if o.containsJsx
-      @generateJsxImports o
     prelude   = []
     unless o.bare
       preludeExps = for exp, i in @expressions
@@ -1013,7 +1012,7 @@ exports.Index = class Index extends Base
 # A JSX element
 exports.JsxElement = class JsxElement extends Base
 
-  # children: ['children', 'attributes']
+  children: ['children_']
 
   constructor: (options) ->
     super()
