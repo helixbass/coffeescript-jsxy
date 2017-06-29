@@ -49,6 +49,7 @@ exports.Lexer = class Lexer
     @importSpecifierList = no    # Used to identify when in an IMPORT {...} FROM? ...
     @exportSpecifierList = no    # Used to identify when in an EXPORT {...} FROM? ...
     @inJsxExpression = opts.inJsxExpression
+    @_opts = opts
 
     @chunkLine =
       opts.line or 0             # The start line for the current @chunk.
@@ -62,7 +63,7 @@ exports.Lexer = class Lexer
     i = 0
     while @chunk = code[i..]
       consumed = \
-           @jsxToken() or
+           @jsxToken()        or
            @identifierToken() or
            @commentToken()    or
            @whitespaceToken() or
@@ -392,6 +393,7 @@ exports.Lexer = class Lexer
       ) unless topLevel or followsNewline
       @token 'JSX_ELEMENT_NAME', elementName, 0, openingTag.length
       @consumeChunk openingTag.length
+      return {elementName} if @matchJsxTaggedTemplateLiteral()
       @matchJsxHamlShorthands({allowLeadingDotClass: yes})
     else if @matchJsxHamlShorthands({allowLeadingDotClass, allowLeadingWhitespace, addImplicitElementName: yes})
       elementName = 'div'
@@ -408,6 +410,28 @@ exports.Lexer = class Lexer
     [indicator] = match
     @token 'JSX_INLINE_INDICATOR', indicator
     @consumeChunk indicator.length
+
+  matchJsxTaggedTemplateLiteral: ->
+    [..., tagToken] = @tokens
+    prevLength = @tokens.length
+    return unless consumed = @stringToken()
+
+    @_opts.containsJsx = yes
+    (@_opts.jsxImports ?= []).push
+      importDefault: 'styled', from: 'styled-components'
+
+    # TODO: do in rewriter?
+    templateStringTokens = @tokens.splice prevLength
+    tagToken[0] = 'IDENTIFIER'
+    tagName = tagToken[1]
+    tagToken[1] = 'styled'
+    @token '.', '.', 0, 0, tagToken
+    @token 'PROPERTY', tagName, 0, 0, tagToken
+    @tokens.push templateStringTokens...
+
+    @consumeChunk consumed
+
+    yes
 
   matchJsxHamlShorthands: (opts = {}) ->
     {allowLeadingDotClass, allowLeadingWhitespace, addImplicitElementName} = opts

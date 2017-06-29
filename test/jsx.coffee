@@ -6,6 +6,8 @@ test 'simple inline element', ->
   eqJS(
     '%h1 Hello, world!'
     '''
+    import React from 'react';
+
     <h1>
       Hello, world!
     </h1>;
@@ -19,6 +21,8 @@ test 'simple indented element', ->
       Hello, world!
     '''
     '''
+    import React from 'react';
+
     <h1>
       Hello, world!
     </h1>;
@@ -33,6 +37,8 @@ test 'simple nested element', ->
         Hello, world!
     '''
     '''
+    import React from 'react';
+
     <h1>
       <a>
         Hello, world!
@@ -44,19 +50,29 @@ test 'simple nested element', ->
 test 'inline element, no body', ->
   eqJS(
     '%h1'
-    '<h1></h1>;'
+    '''
+    import React from 'react';
+
+    <h1></h1>;
+    '''
   )
 
 test 'inline element with parenthesized attributes', ->
   eqJS(
     '''%h1( a="b" c='def' g={h + i})'''
-    '''<h1 a="b" c='def' g={h + i}></h1>;'''
+    '''
+    import React from 'react';
+
+    <h1 a="b" c='def' g={h + i}></h1>;
+    '''
   )
 
 test 'inline element with parenthesized attributes and content', ->
   eqJS(
     '''%h1( a="b" c='def' g={h + i}) jkl'''
     '''
+    import React from 'react';
+
     <h1 a="b" c='def' g={h + i}>
       jkl
     </h1>;
@@ -67,6 +83,8 @@ test 'inline =expressionBody', ->
   eqJS(
     '%h1= name'
     '''
+    import React from 'react';
+
     <h1>
       {name}
     </h1>;
@@ -77,6 +95,8 @@ test 'expression inline content', ->
   eqJS(
     '%h1 {@abc}'
     '''
+    import React from 'react';
+
     <h1>
       {this.abc}
     </h1>;
@@ -87,6 +107,8 @@ test 'mixed inline content', ->
   eqJS(
     '%h1 name {@abc}'
     '''
+    import React from 'react';
+
     <h1>
       name {this.abc}
     </h1>;
@@ -100,6 +122,8 @@ test 'indented equals expression', ->
       = abc
     '''
     '''
+    import React from 'react';
+
     <h1>
       {abc}
     </h1>;
@@ -117,6 +141,8 @@ test 'no equals expression unless line-starting', ->
       =abc
     '''
     '''
+    import React from 'react';
+
     <h1>
       x = abc
       y= abc
@@ -136,6 +162,8 @@ test 'equals for loop', ->
     '''
     '''
     var FORCE_EXPRESSION, x;
+
+    import React from 'react';
 
     <h1>
       {FORCE_EXPRESSION = (function() {
@@ -173,6 +201,8 @@ test 'various indented expressions', ->
         @m }
     '''
     '''
+    import React from 'react';
+
     <h1>
       {this.x} {this.y}
       abc
@@ -191,7 +221,11 @@ test 'simple object attributes', ->
     '''
     %h1{ a: b }
     '''
-    '<h1 a={b}></h1>;'
+    '''
+    import React from 'react';
+
+    <h1 a={b}></h1>;
+    '''
   )
 
 test 'value object attributes', ->
@@ -199,7 +233,11 @@ test 'value object attributes', ->
     '''
     %h1{ a, @b, c: d() }
     '''
-    '<h1 a={a} b={this.b} c={d()}></h1>;'
+    '''
+    import React from 'react';
+
+    <h1 a={a} b={this.b} c={d()}></h1>;
+    '''
   )
 
 test 'multi-line object attributes', ->
@@ -216,6 +254,8 @@ test 'multi-line object attributes', ->
     '''
     var x;
 
+    import React from 'react';
+
     x = function() {
       return <h1 a={a} b={this.b} c={d()}></h1>;
     };
@@ -231,6 +271,8 @@ test 'parenthesized and object attributes', ->
     %h2(e={f}){a,@b,c:d()}
     '''
     '''
+    import React from 'react';
+
     <h1 e='f' a={a} b={this.b} c={d()}></h1>;
 
     <h2 e={f} a={a} b={this.b} c={d()}></h2>;
@@ -243,6 +285,8 @@ test 'simple tag', ->
     <h1></h1>
     '''
     '''
+    import React from 'react';
+
     <h1></h1>;
     '''
   )
@@ -258,6 +302,8 @@ test 'self-closing tags', ->
     />
     '''
     '''
+    import React from 'react';
+
     <h1></h1>;
 
     <h2></h2>;
@@ -279,6 +325,8 @@ test 'tag with attributes and indented body', ->
     </h1>
     '''
     '''
+    import React from 'react';
+
     <h1 a="b" c={this.d}>
       <b>
         Hey
@@ -294,6 +342,8 @@ test 'nested inline tags', ->
     <h1   a="b" c = {@d} ><b > Hey {@name}</b></h1>
     '''
     '''
+    import React from 'react';
+
     <h1 a="b" c={this.d}><b> Hey {this.name}</b></h1>;
     '''
   )
@@ -317,6 +367,8 @@ test 'element enders', ->
     '''
     '''
     var FORCE_EXPRESSION, x, y, z;
+
+    import React from 'react';
 
     x(<h1></h1>, 2);
 
@@ -355,6 +407,8 @@ test 'shorthand tags', ->
       #def.ghi.jkl
     '''
     '''
+    import React from 'react';
+
     <h1 id='abc'>
       <div id='def' className='ghi jkl'></div>
     </h1>;
@@ -377,6 +431,8 @@ test 'multiline attributes', ->
         )
     '''
     '''
+    import React from 'react';
+
     <h1 a={b} c='d'>
       <a e={f(g)} h='i'>
         <b j='k' l='m'></b>
@@ -403,6 +459,8 @@ test 'multiline attributes in tags', ->
       </a></h1>
     '''
     '''
+    import React from 'react';
+
     <h1 a={b} c='d'>
       <a e={f(g)} h='i'>
         <b j='k' l='m'></b>
@@ -431,6 +489,8 @@ test 'leading-dot classname', ->
     '''
     '''
     var SplitPane, f, x;
+
+    import React from 'react';
 
     SplitPane = function({left, right}) {
       return <div className='SplitPane'>
@@ -474,6 +534,8 @@ test 'all together now', ->
     '''
     '''
     var Recipe;
+
+    import React from 'react';
 
     Recipe = function({name, ingredients, steps}) {
       var FORCE_EXPRESSION, i;
@@ -520,6 +582,8 @@ test 'indented = expression following outdent', ->
     '''
     var FORCE_EXPRESSION, appt;
 
+    import React from 'react';
+
     <div className='table-responsive small'>
       <thead>
         <tr></tr>
@@ -545,6 +609,8 @@ test 'outer leading #', ->
       #def.ghi.jkl
     '''
     '''
+    import React from 'react';
+
     <div id='abc'>
       <div id='def' className='ghi jkl'></div>
     </div>;
@@ -560,6 +626,8 @@ test 'leading dot class after if', ->
     '''
     '''
     var FORCE_EXPRESSION;
+
+    import React from 'react';
 
     <div>
       {FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}
@@ -580,6 +648,8 @@ test 'leading dot class after blank line', ->
     '''
     var a, c;
 
+    import React from 'react';
+
     ({a} = b);
 
     <div className='small'></div>;
@@ -596,6 +666,10 @@ test 'leading interpreted dot class', ->
     .( 'small', 'text-danger': not mobile_confirm ){ other: attr }
     '''
     '''
+    import classNames from 'classnames';
+
+    import React from 'react';
+
     <div className={classNames('small', {
       'text-danger': !mobile_confirm
     })}></div>;
@@ -634,6 +708,8 @@ test 'allow closer at same indent', ->
     '''
     '''
     var FORCE_EXPRESSION;
+
+    import React from 'react';
 
     <h1>
       {FORCE_EXPRESSION = a(b ? 1 : 2)}
@@ -699,6 +775,8 @@ test 'whitespace', ->
         d
     '''
     '''
+    import React from 'react';
+
     <a> a{b} c {d} </a>;
 
     <a>
@@ -777,6 +855,8 @@ test 'spread props', ->
     %a{ b... }
     '''
     '''
+    import React from 'react';
+
     <a {...b}></a>;
     '''
   )
@@ -789,6 +869,8 @@ test 'filter', ->
       {a | b ~ c ~ d | e}
     '''
     '''
+    import React from 'react';
+
     <a>
       {currency(amount)}
     </a>;
@@ -805,10 +887,76 @@ test 'data-attribute', ->
     %a{ 'data-id': 1 }
     '''
     '''
+    import React from 'react';
+
     <a data-id={1}></a>;
     '''
   )
 
+test 'auto-generate React and classNames imports', ->
+  eqJS(
+    '''
+    %a.(x)
+    '''
+    '''
+    import classNames from 'classnames';
+
+    import React from 'react';
+
+    <a className={classNames(x)}></a>;
+    '''
+  )
+
+test "don't auto-generate React and classNames imports if already explicitly imported", ->
+  eqJS(
+    '''
+    import React from 'react'
+    import classNames from 'classnames'
+
+    %a.(x)
+    '''
+    '''
+    import React from 'react';
+
+    import classNames from 'classnames';
+
+    <a className={classNames(x)}></a>;
+    '''
+  )
+
+test 'styled-components template literal', ->
+  eqJS(
+    '''
+    %a"""
+      text-decoration: underline;
+      color: #{(props) -> props.color}
+    """
+    '''
+    '''
+      import styled from 'styled-components';
+
+      styled.a`text-decoration: underline;\\ncolor: ${(function(props) {
+        return props.color;
+      })}`;
+    '''
+  )
+
+# test 'styled-components sass template literal w/ interpolation', ->
+#   eqJS(
+#     '''
+#     %a"""
+#       text-decoration: underline
+#       color: #{(props) -> props.color}
+#     """
+#     '''
+#     '''
+#     import styled from 'styled-components';
+
+#     styled.a`
+#       text-decoration: underline;
+#       color: #{(props) -> props.color}
+#     '''
+#   )
 # TODO:
 # errors on stray <
 # error tests:

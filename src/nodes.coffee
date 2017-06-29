@@ -448,6 +448,8 @@ exports.Block = class Block extends Base
     # Mark given local variables in the root scope as parameters so they don't
     # end up being declared on this block.
     o.scope.parameter name for name in o.locals or []
+    if o.containsJsx
+      @generateJsxImports o
     prelude   = []
     unless o.bare
       preludeExps = for exp, i in @expressions
@@ -463,6 +465,32 @@ exports.Block = class Block extends Base
     HoistTarget.expand fragments
     return fragments if o.bare
     [].concat prelude, @makeCode("(function() {\n"), fragments, @makeCode("\n}).call(this);\n")
+
+  generateJsxImports: (o) ->
+    {jsxImports = []} = o
+    addedDynamicClassNamesImport = no
+    @traverseChildren yes, (child) =>
+      return if addedDynamicClassNamesImport
+      return unless child instanceof JsxElement
+      if child.shorthands.classes.isArgList
+        addedDynamicClassNamesImport = yes
+        jsxImports.push
+          importDefault: 'classNames', from: 'classnames'
+
+    explicitImports = []
+    @traverseChildren false, (child) =>
+      return false unless child instanceof ImportDeclaration
+      explicitImports.push child
+    alreadyExplicitlyImported = ({importDefault, from}) ->
+      for {clause, source} in explicitImports
+        continue unless importDefault is clause?.defaultBinding?.identifier
+        continue unless from is source?.value?[1...-1]
+        return yes
+
+    for jsxImport in jsxImports when not alreadyExplicitlyImported jsxImport
+      @expressions.unshift new ImportDeclaration new ImportClause(new IdentifierLiteral jsxImport.importDefault), new StringLiteral "'#{jsxImport.from}'"
+
+    o.bare = yes if jsxImports.length
 
   # Compile the expressions body for the contents of a function, with
   # declarations of all inner variables pushed up to the top.
@@ -1002,7 +1030,7 @@ exports.JsxElement = class JsxElement extends Base
     compiledClassAttribute = do =>
       {classes} = @shorthands
       return [] unless classes.length
-      return [@makeCode " className='#{@shorthands.classes.join ' '}'"] unless classes.isArgList
+      return [@makeCode " className='#{classes.join ' '}'"] unless classes.isArgList
 
       @attributes.object ?= new JsxAttributesObj
       @attributes.object.properties.push(

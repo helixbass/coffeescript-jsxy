@@ -91,6 +91,13 @@ exports.compile = compile = withPrettyErrors (code, options) ->
         options.bare = yes
         break
 
+  for token in tokens
+    if token[0] in ['JSX_START_TAG_START', 'JSX_ELEMENT_NAME']
+      options.containsJsx = yes
+      (options.jsxImports ?= []).push
+        importDefault: 'React', from: 'react'
+      break
+
   fragments = parser.parse(tokens).compileToFragments options
 
   currentLine = 0
