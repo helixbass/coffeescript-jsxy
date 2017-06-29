@@ -626,7 +626,7 @@ grammar =
   ]
 
   JsxElementChild: [
-    o 'JSX_ELEMENT_CONTENT',                                               -> $1
+    o 'JSX_ELEMENT_CONTENT',                                               -> new JsxContent $1
     o 'JSX_ELEMENT_INLINE_CONTENT',                                        -> new JsxInlineContent $1
     o 'JsxElement',                                                        -> $1
     o 'JSX_INLINE_ELEMENT JsxElement',                                     -> $2.inline = yes; $2

@@ -1097,8 +1097,8 @@ exports.JsxElement = class JsxElement extends Base
                 else
                   "\n#{idt}"
               )
-              (if isString child # content
-                [@makeCode child]
+              (if child instanceof JsxContent
+                [@makeCode child.str]
               else if child instanceof JsxInlineContent
                 [@makeCode child.str]
               else if child instanceof JsxElement
@@ -1127,6 +1127,11 @@ exports.JsxElement = class JsxElement extends Base
       compiledChildren...
       endTag...
     ]
+
+exports.JsxContent = class JsxContent extends Base
+
+  constructor: (@str) ->
+    super()
 
 exports.JsxInlineContent = class JsxInlineContent extends Base
 
