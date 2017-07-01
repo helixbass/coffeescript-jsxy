@@ -1012,13 +1012,14 @@ exports.Index = class Index extends Base
 # A JSX element
 exports.JsxElement = class JsxElement extends Base
 
-  children: ['children_']
+  children: ['children_', 'objAttributes']
 
   constructor: (options) ->
     super()
     {@name, children: @children_ = [], @attributes = {}, @shorthands = {}, @inline} = options
     @inlineTagBody = @children_.inlineBody
     @attributes.list   ?= []
+    {list: @listAttributes, object: @objAttributes} = @attributes
     @shorthands.classes ?= []
 
   compileNode: (o) ->
@@ -1038,8 +1039,7 @@ exports.JsxElement = class JsxElement extends Base
           combined.push klass...
         else
           combined.push new Value new StringLiteral "'#{klass}'"
-      @attributes.object ?= new JsxAttributesObj
-      @attributes.object.properties.push(
+      (@objAttributes ?= new JsxAttributesObj).properties.push(
         new Assign(
           new Value new IdentifierLiteral('className')
           new Call(
@@ -1054,9 +1054,9 @@ exports.JsxElement = class JsxElement extends Base
       []
 
     compiledListAttributes = do =>
-      return [] unless @attributes.list.length
+      return [] unless @listAttributes.length
       attr = []
-      for {name, value} in @attributes.list
+      for {name, value} in @listAttributes
         attr.push @makeCode ' '
         attr.push @makeCode name
         attr.push @makeCode '='
@@ -1069,7 +1069,7 @@ exports.JsxElement = class JsxElement extends Base
       attr
 
     compiledObjectAttributes =
-      @attributes.object?.compileToFragments?(o) ? []
+      @objAttributes?.compileToFragments?(o) ? []
 
     startTag = [
       @makeCode '<'
