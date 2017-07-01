@@ -553,30 +553,24 @@ grammar =
 
   JsxElementShorthands: [
     o 'JsxElementShorthandClasses',                                                  -> classes: $1
-    o 'JsxElementShorthandInterpretedClasses',                                       -> classes: $1
     o 'JsxElementShorthandId',                                                       -> id: $1
     o 'JsxElementShorthandId JsxElementShorthandClasses',                            -> classes: $2, id: $1
-    o 'JsxElementShorthandId JsxElementShorthandInterpretedClasses',                 -> classes: $2, id: $1
     o 'JsxElementShorthandClasses JsxElementShorthandId JsxElementShorthandClasses', -> classes: $1.concat($2), id: $2
     o 'JsxElementShorthandClasses JsxElementShorthandId',                            -> classes: $1, id: $2
-    o 'JsxElementShorthandInterpretedClasses JsxElementShorthandId',                 -> classes: $1, id: $2
   ]
 
   JsxElementShorthandId: [
     o 'JSX_ID_SHORTHAND_SYMBOL JSX_ID_SHORTHAND', -> $2
   ]
 
-  JsxElementShorthandInterpretedClasses: [
-    o 'JSX_CLASS_SHORTHAND_SYMBOL Arguments', -> $2.isArgList = yes; $2
-  ]
-
   JsxElementShorthandClasses: [
     o 'JsxElementShorthandClass',                            -> [$1]
-    o 'JsxElementShorthandClasses JsxElementShorthandClass', -> $1.concat $2
+    o 'JsxElementShorthandClasses JsxElementShorthandClass', -> $1.concat [$2]
   ]
 
   JsxElementShorthandClass: [
     o 'JSX_CLASS_SHORTHAND_SYMBOL JSX_CLASS_SHORTHAND', -> $2
+    o 'JSX_CLASS_SHORTHAND_SYMBOL Arguments',           -> $2
   ]
 
   JsxAttributes: [

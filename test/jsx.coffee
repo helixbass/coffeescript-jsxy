@@ -924,22 +924,36 @@ test "don't auto-generate React and classNames imports if already explicitly imp
     '''
   )
 
-test 'styled-components template literal', ->
+test 'both literal and interpreted classNames', ->
   eqJS(
     '''
-    %a"""
-      text-decoration: underline;
-      color: #{(props) -> props.color}
-    """
+    %h1.text-muted.('abc' if def)
     '''
     '''
-      import styled from 'styled-components';
+    import classNames from 'classnames';
 
-      styled.a`text-decoration: underline;\\ncolor: ${(function(props) {
-        return props.color;
-      })}`;
+    import React from 'react';
+
+    <h1 className={classNames('text-muted', def ? 'abc' : void 0)}></h1>;
     '''
   )
+
+# test 'styled-components template literal', ->
+#   eqJS(
+#     '''
+#     %a"""
+#       text-decoration: underline;
+#       color: #{(props) -> props.color}
+#     """
+#     '''
+#     '''
+#       import styled from 'styled-components';
+
+#       styled.a`text-decoration: underline;\\ncolor: ${(function(props) {
+#         return props.color;
+#       })}`;
+#     '''
+#   )
 
 # test 'styled-components sass template literal w/ interpolation', ->
 #   eqJS(

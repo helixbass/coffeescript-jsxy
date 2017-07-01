@@ -471,7 +471,7 @@ exports.Block = class Block extends Base
     @traverseChildren yes, (child) =>
       return if addedDynamicClassNamesImport
       return unless child instanceof JsxElement
-      if child.shorthands.classes.isArgList
+      if child.shorthands.classes.some((klass) -> Array.isArray klass)
         addedDynamicClassNamesImport = yes
         jsxImports.push
           importDefault: 'classNames', from: 'classnames'
@@ -1029,15 +1029,22 @@ exports.JsxElement = class JsxElement extends Base
     compiledClassAttribute = do =>
       {classes} = @shorthands
       return [] unless classes.length
-      return [@makeCode " className='#{classes.join ' '}'"] unless classes.isArgList
+      hasInterpretedClasses = classes.some (klass) -> Array.isArray klass
+      return [@makeCode " className='#{classes.join ' '}'"] unless hasInterpretedClasses
 
+      combined = []
+      for klass in classes
+        if Array.isArray klass
+          combined.push klass...
+        else
+          combined.push new Value new StringLiteral "'#{klass}'"
       @attributes.object ?= new JsxAttributesObj
       @attributes.object.properties.push(
         new Assign(
           new Value new IdentifierLiteral('className')
           new Call(
             new Value new IdentifierLiteral('classNames')
-            classes
+            combined
           )
           'object'
           new Literal ':'

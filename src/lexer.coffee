@@ -393,7 +393,7 @@ exports.Lexer = class Lexer
       ) unless topLevel or followsNewline
       @token 'JSX_ELEMENT_NAME', elementName, 0, openingTag.length
       @consumeChunk openingTag.length
-      return {elementName} if @matchJsxTaggedTemplateLiteral()
+      # return {elementName} if @matchJsxTaggedTemplateLiteral()
       @matchJsxHamlShorthands({allowLeadingDotClass: yes})
     else if @matchJsxHamlShorthands({allowLeadingDotClass, allowLeadingWhitespace, addImplicitElementName: yes})
       elementName = 'div'
