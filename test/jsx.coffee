@@ -938,6 +938,18 @@ test 'both literal and interpreted classNames', ->
     '''
   )
 
+test 'dotted element name', ->
+  eqJS(
+    '''
+    %Form.Field
+    '''
+    '''
+    import React from 'react';
+
+    <Form.Field></Form.Field>;
+    '''
+  )
+
 # test 'styled-components template literal', ->
 #   eqJS(
 #     '''

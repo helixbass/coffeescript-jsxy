@@ -1580,8 +1580,8 @@ MULTI_DENT = /^(?:\n[^\n\S]*)+/
 JSTOKEN      = ///^ `(?!``) ((?: [^`\\] | \\[\s\S]           )*) `   ///
 HERE_JSTOKEN = ///^ ```     ((?: [^`\\] | \\[\s\S] | `(?!``) )*) ``` ///
 
-JSX_ELEMENT =                    /// ^     %([a-zA-Z][a-zA-Z_0-9]*) ///
-JSX_ELEMENT_LEADING_WHITESPACE = /// ^ \s* %([a-zA-Z][a-zA-Z_0-9]*) ///
+JSX_ELEMENT =                    /// ^     %([a-zA-Z][a-zA-Z_0-9]*(?:\.[A-Z][a-zA-z_0-9]*)*) ///
+JSX_ELEMENT_LEADING_WHITESPACE = /// ^ \s* %([a-zA-Z][a-zA-Z_0-9]*(?:\.[A-Z][a-zA-z_0-9]*)*) ///
 JSX_ID_SHORTHAND =                    /// ^     (\#) ([a-zA-Z][a-zA-Z_0-9\-]*) ///
 JSX_ID_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \#) ([a-zA-Z][a-zA-Z_0-9\-]*) ///
 JSX_CLASS_SHORTHAND =                    /// ^     (\.) (?: (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
