@@ -59,9 +59,11 @@ Standard JSX syntax is also supported.
 Let's take a look (compiled JS output on right)
 #### Elements
 Create JSX elements with `%element` syntax
+
 | <pre>  | <pre>          |
 |   %div |   <div></div>; |
 | </pre> | </pre>         |
+
 Child
 
 
