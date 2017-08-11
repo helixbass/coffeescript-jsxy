@@ -232,6 +232,16 @@ test "method call chaining inside objects", ->
       .c
   eq 42, result.b
 
+test "#4568: refine sameLine implicit object tagging", ->
+  condition = yes
+  fn = -> yes
+
+  x =
+    fn bar: {
+      foo: 123
+    } if not condition
+  eq x, undefined
+
 # Nested blocks caused by paren unwrapping
 test "#1492: Nested blocks don't cause double semicolons", ->
   js = CoffeeScript.compile '(0;0)'
@@ -338,3 +348,62 @@ test "#4487: Handle unusual outdentation", ->
        2
       3
   eq b, undefined
+
+test "#3906: handle further indentation inside indented chain", ->
+  eq 1, CoffeeScript.eval '''
+    z = b: -> d: 2
+    e = ->
+    f = 3
+
+    z
+        .b ->
+            c
+        .d
+
+    e(
+        f
+    )
+
+    1
+  '''
+
+  eq 1, CoffeeScript.eval '''
+    z = -> b: -> e: ->
+
+    z()
+        .b
+            c: 'd'
+        .e()
+
+    f = [
+        'g'
+    ]
+
+    1
+  '''
+
+  eq 1, CoffeeScript.eval '''
+    z = -> c: -> c: ->
+
+    z('b')
+      .c 'a',
+        {b: 'a'}
+      .c()
+    z(
+      'b'
+    )
+    1
+  '''
+
+test "#3199: throw multiline implicit object", ->
+  x = do ->
+    if no then throw
+      type: 'a'
+      msg: 'b'
+  eq undefined, x
+
+  y = do ->
+    if no then return
+      type: 'a'
+      msg: 'b'
+  eq undefined, y

@@ -13,7 +13,7 @@
 
 # Import the helpers we need.
 {count, starts, compact, repeat, invertLiterate, merge,
-locationDataToString, throwSyntaxError} = require './helpers'
+attachCommentsToNode, locationDataToString, throwSyntaxError} = require './helpers'
 
 # The Lexer Class
 # ---------------
@@ -40,14 +40,14 @@ exports.Lexer = class Lexer
     @indebt     = 0              # The over-indentation at the current level.
     @outdebt    = 0              # The under-outdentation at the current level.
     @indents    = []             # The stack of all current indentation levels.
-    @indentLiteral = ''          # The indentation
+    @indentLiteral = ''          # The indentation.
     @ends       = []             # The stack for pairing up tokens.
     @tokens     = []             # Stream of parsed tokens in the form `['TYPE', value, location data]`.
-    @seenFor    = no             # Used to recognize FORIN, FOROF and FORFROM tokens.
-    @seenImport = no             # Used to recognize IMPORT FROM? AS? tokens.
-    @seenExport = no             # Used to recognize EXPORT FROM? AS? tokens.
-    @importSpecifierList = no    # Used to identify when in an IMPORT {...} FROM? ...
-    @exportSpecifierList = no    # Used to identify when in an EXPORT {...} FROM? ...
+    @seenFor    = no             # Used to recognize `FORIN`, `FOROF` and `FORFROM` tokens.
+    @seenImport = no             # Used to recognize `IMPORT FROM? AS?` tokens.
+    @seenExport = no             # Used to recognize `EXPORT FROM? AS?` tokens.
+    @importSpecifierList = no    # Used to identify when in an `IMPORT {...} FROM? ...`.
+    @exportSpecifierList = no    # Used to identify when in an `EXPORT {...} FROM? ...`.
     @inJsxExpression = opts.inJsxExpression
     @_opts = opts
 
@@ -74,7 +74,7 @@ exports.Lexer = class Lexer
            @jsToken()         or
            @literalToken()
 
-      # Update position
+      # Update position.
       [@chunkLine, @chunkColumn] = @getLineAndColumnFromChunk consumed
 
       i += consumed
@@ -82,7 +82,7 @@ exports.Lexer = class Lexer
       return {@tokens, index: i} if opts.untilBalanced and @ends.length is 0
 
     @closeIndentation()
-    @error "missing #{end.tag}", end.origin[2] if end = @ends.pop()
+    @error "missing #{end.tag}", (end.origin ? end)[2] if end = @ends.pop()
     return @tokens if opts.rewrite is off
     (new Rewriter).rewrite @tokens
 
@@ -135,6 +135,12 @@ exports.Lexer = class Lexer
     if id is 'default' and @seenExport and @tag() in ['EXPORT', 'AS']
       @token 'DEFAULT', id
       return id.length
+    if id is 'do' and regExSuper = /^(\s*super)(?!\(\))/.exec @chunk[3...]
+      @token 'SUPER', 'super'
+      @token 'CALL_START', '('      
+      @token 'CALL_END', ')'
+      [input, sup] = regExSuper
+      return sup.length + 3
 
     prev = @prev()
 
@@ -798,17 +804,60 @@ exports.Lexer = class Lexer
     @consumeChunk match.length
     {trailingWhitespace}
 
-  # Matches and consumes comments.
-  commentToken: ->
-    return 0 unless match = @chunk.match COMMENT
+  # Matches and consumes comments. The comments are taken out of the token
+  # stream and saved for later, to be reinserted into the output after
+  # everything has been parsed and the JavaScript code generated.
+  commentToken: (chunk = @chunk) ->
+    return 0 unless match = chunk.match COMMENT
     [comment, here] = match
+    contents = null
+    # Does this comment follow code on the same line?
+    newLine = /^\s*\n+\s*#/.test comment
     if here
-      if match = HERECOMMENT_ILLEGAL.exec comment
-        @error "block comments cannot contain #{match[0]}",
-          offset: match.index, length: match[0].length
-      if here.indexOf('\n') >= 0
-        here = here.replace /// \n #{repeat ' ', @indent} ///g, '\n'
-      @token 'HERECOMMENT', here, 0, comment.length
+      matchIllegal = HERECOMMENT_ILLEGAL.exec comment
+      if matchIllegal
+        @error "block comments cannot contain #{matchIllegal[0]}",
+          offset: matchIllegal.index, length: matchIllegal[0].length
+
+      # Parse indentation or outdentation as if this block comment didn’t exist.
+      chunk = chunk.replace "####{here}###", ''
+      # Remove leading newlines, like `Rewriter::removeLeadingNewlines`, to
+      # avoid the creation of unwanted `TERMINATOR` tokens.
+      chunk = chunk.replace /^\n+/, ''
+      @lineToken {chunk}
+
+      # Pull out the ###-style comment’s content, and format it.
+      content = here
+      if '\n' in content
+        content = content.replace /// \n #{repeat ' ', @indent} ///g, '\n'
+      contents = [content]
+    else
+      # The `COMMENT` regex captures successive line comments as one token.
+      # Remove any leading newlines before the first comment, but preserve
+      # blank lines between line comments.
+      content = comment.replace /^(\n*)/, ''
+      content = content.replace /^([ |\t]*)#/gm, ''
+      contents = content.split '\n'
+
+    commentAttachments = for content, i in contents
+      content: content
+      here: here?
+      newLine: newLine or i isnt 0 # Line comments after the first one start new lines, by definition.
+
+    prev = @prev()
+    unless prev
+      # If there’s no previous token, create a placeholder token to attach
+      # this comment to; and follow with a newline.
+      commentAttachments[0].newLine = yes
+      @lineToken chunk: @chunk[comment.length..] # Set the indent.
+      placeholderToken = @makeToken 'JS', ''
+      placeholderToken.generated = yes
+      placeholderToken.comments = commentAttachments
+      @tokens.push placeholderToken
+      @newlineToken 0
+    else
+      attachCommentsToNode commentAttachments, prev
+
     comment.length
 
   # Matches JavaScript interpolated directly into the source via backticks.
@@ -834,6 +883,8 @@ exports.Lexer = class Lexer
           offset: match.index + match[1].length
       when match = @matchWithInterpolations HEREGEX, '///'
         {tokens, index} = match
+        comments = @chunk[0...index].match /\s+(#(?!{).*)/g
+        @commentToken comment for comment in comments if comments
       when match = REGEX.exec @chunk
         [regex, body, closed] = match
         @validateEscapes body, isRegex: yes, offsetInChunk: 1
@@ -885,8 +936,8 @@ exports.Lexer = class Lexer
   # Keeps track of the level of indentation, because a single outdent token
   # can close multiple indents, so we need to know how far in we happen to be.
   lineToken: (opts = {}) ->
-    {dry, returnNumOutdents, noNewlines} = opts
-    return 0 unless match = MULTI_DENT.exec @chunk
+    {dry, returnNumOutdents, noNewlines, chunk = @chunk} = opts
+    return 0 unless match = MULTI_DENT.exec chunk
     indent = match[0]
 
     @seenFor = no
@@ -924,7 +975,7 @@ exports.Lexer = class Lexer
       when 'consumedIndebt'
         if noNewlines then @suppressNewlines() else @newlineToken 0, {includesBlankLine}
       when 'indent'
-        if noNewlines or @tag() is 'RETURN'
+        if noNewlines
           @indebt = size - @indent
           @suppressNewlines()
           break
@@ -958,7 +1009,7 @@ exports.Lexer = class Lexer
     while moveOut > 0
       lastIndent = @indents[@indents.length - 1]
       if not lastIndent
-        moveOut = 0
+        @outdebt = moveOut = 0
       else if @outdebt and moveOut <= @outdebt
         @outdebt -= moveOut
         moveOut   = 0
@@ -1002,7 +1053,14 @@ exports.Lexer = class Lexer
   # Use a `\` at a line-ending to suppress the newline.
   # The slash is removed here once its job is done.
   suppressNewlines: ->
-    @tokens.pop() if @value() is '\\'
+    prev = @prev()
+    if prev[1] is '\\'
+      if prev.comments and @tokens.length > 1
+        # `@tokens.length` should be at least 2 (some code, then `\`).
+        # If something puts a `\` after nothing, they deserve to lose any
+        # comments that trail it.
+        attachCommentsToNode prev.comments, @tokens[@tokens.length - 2]
+      @tokens.pop()
     this
 
   # We treat all other single characters as a token. E.g.: `( ) , . !`
@@ -1244,6 +1302,7 @@ exports.Lexer = class Lexer
         last_line:    lastToken[2].last_line
         last_column:  lastToken[2].last_column
       ]
+      lparen[2] = lparen.origin[2]
       rparen = @token 'STRING_END', ')'
       rparen[2] =
         first_line:   lastToken[2].last_line
@@ -1344,9 +1403,7 @@ exports.Lexer = class Lexer
       else
         LINE_CONTINUER
     regex.test(@chunk) or
-    @tag() in ['\\', '.', '?.', '?::', 'UNARY', 'MATH', 'UNARY_MATH', '+', '-',
-               '**', 'SHIFT', 'RELATION', 'COMPARE', '&', '^', '|', '&&', '||',
-               'BIN?', 'THROW', 'EXTENDS', 'DEFAULT']
+    @tag() in UNFINISHED
 
   jsxLeadingDotClassAllowed: ({includesBlankLine} = {}) ->
     return yes unless @tokens.length
@@ -1571,7 +1628,7 @@ OPERATOR   = /// ^ (
 
 WHITESPACE = /^[^\n\S]+/
 
-COMMENT    = /^###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#])(?![a-zA-Z]).*)+/
+COMMENT    = /^\s*###([^#][\s\S]*?)(?:###[^\n\S]*|###$)|^(?:\s*#(?!##[^#])(?![a-zA-Z]).*)+/
 
 CODE       = /^[-=]>/
 
@@ -1748,3 +1805,8 @@ LINE_BREAK = ['INDENT', 'OUTDENT', 'TERMINATOR']
 
 # Additional indent in front of these is ignored.
 INDENTABLE_CLOSERS = [')', '}', ']']
+
+# Tokens that, when appearing at the end of a line, suppress a following TERMINATOR/INDENT token
+UNFINISHED = ['\\', '.', '?.', '?::', 'UNARY', 'MATH', 'UNARY_MATH', '+', '-',
+           '**', 'SHIFT', 'RELATION', 'COMPARE', '&', '^', '|', '&&', '||',
+           'BIN?', 'EXTENDS', 'DEFAULT']

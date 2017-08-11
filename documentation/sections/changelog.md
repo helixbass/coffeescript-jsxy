@@ -1,6 +1,41 @@
 ## Changelog
 
 ```
+releaseHeader('2017-08-03', '2.0.0-beta4', '2.0.0-beta3')
+```
+
+*   This release includes [all the changes from 1.12.6 to 1.12.7](#1.12.7).
+*   [Line comments](#comments) (starting with `#`) are now output in the generated JavaScript.
+*   [Block comments](#comments) (delimited by `###`) are now allowed anywhere, including inline where they previously weren’t possible. This provides support for [static type annotations](#type-annotations) using Flow’s comments-based syntax.
+*   Spread syntax (`...` for objects) is now supported in JSX tags: `<div {props...} />`.
+*   Argument parsing for scripts run via `coffee` is improved. See [breaking changes](#breaking-changes-argument-parsing-and-shebang-lines).
+*   CLI: Propagate `SIGINT` and `SIGTERM` signals when node is forked.
+*   `await` in the REPL is now allowed without requiring a wrapper function.
+*   `do super` is now allowed, and other accesses of `super` like `super.x.y` or `super['x'].y` now work.
+*   Splat/spread syntax triple dots are now allowed on either the left or the right (so `props...` or `...props` are both valid).
+*   Tagged template literals are recognized as callable functions.
+*   Bugfixes for object spread syntax in nested properties.
+*   Bugfixes for destructured function parameter default values.
+
+```
+releaseHeader('2017-07-16', '1.12.7', '1.12.6')
+```
+
+*   Fix regressions in 1.12.6 related to chained function calls and indented `return` and `throw` arguments.
+*   The REPL no longer warns about assigning to `_`.
+
+```
+releaseHeader('2017-06-30', '2.0.0-beta3', '2.0.0-beta2')
+```
+
+*   [JSX](#jsx) is now supported.
+*   [Object rest/spread properties](#object-spread) are now supported.
+*   Bound (fat arrow) methods are once again supported in classes; though an error will be thrown if you attempt to call the method before it is bound. See [breaking changes for classes](#breaking-changes-classes).
+*   The REPL no longer warns about assigning to `_`.
+*   Bugfixes for destructured nested default values and issues related to chaining or continuing expressions across multiple lines.
+
+
+```
 releaseHeader('2017-05-16', '2.0.0-beta2', '2.0.0-beta1')
 ```
 

@@ -123,15 +123,15 @@ test "@-parameters: automatically assign an argument's value to a property of th
   ((@prop) ->).call context = {}, nonce
   eq nonce, context.prop
 
-  # allow splats along side the special argument
+  # Allow splats alongside the special argument
   ((splat..., @prop) ->).apply context = {}, [0, 0, nonce]
   eq nonce, context.prop
 
-  # allow the argument itself to be a splat
+  # Allow the argument itself to be a splat
   ((@prop...) ->).call context = {}, 0, nonce, 0
   eq nonce, context.prop[1]
 
-  # the argument should not be able to be referenced normally
+  # The argument should not be able to be referenced normally
   code = '((@prop) -> prop).call {}'
   doesNotThrow -> CoffeeScript.compile code
   throws (-> CoffeeScript.run code), ReferenceError
@@ -184,18 +184,18 @@ test "destructuring in function definition", ->
   }
 
 test "rest element destructuring in function definition", ->
-  obj = {a:1, b:2, c:3, d:4, e:5}
+  obj = {a: 1, b: 2, c: 3, d: 4, e: 5}
 
   (({a, b, r...}) ->
     eq 1, a
     eq 2, b,
-    deepEqual r, {c:3, d:4, e:5}
+    deepEqual r, {c: 3, d: 4, e: 5}
   ) obj
 
-  (({a:p, b, r...}, q) ->
+  (({a: p, b, r...}, q) ->
     eq p, 1
     eq q, 9
-    deepEqual r, {c:3, d:4, e:5}
+    deepEqual r, {c: 3, d: 4, e: 5}
   ) {a:1, b:2, c:3, d:4, e:5}, 9
 
   a1={}; b1={}; c1={}; d1={}
@@ -213,11 +213,11 @@ test "rest element destructuring in function definition", ->
     b2: {b1, c1}
   }
 
-  (({a:w, b:{c:{d:{b1:bb, r1...}}}, r2...}) ->
+  (({a: w, b: {c: {d: {b1: bb, r1...}}}, r2...}) ->
     eq a1, w
     eq bb, b1
     eq r2.b, undefined
-    deepEqual r1, {e:c1, f:d1}
+    deepEqual r1, {e: c1, f: d1}
     deepEqual r2.b2, {b1, c1}
   ) obj1
 
@@ -233,19 +233,25 @@ test "rest element destructuring in function definition", ->
 
   (({a, r...} = {}) ->
     eq a, 1
-    deepEqual r, {b:2, c:3}
-  ) {a:1, b:2, c:3}
+    deepEqual r, {b: 2, c: 3}
+  ) {a: 1, b: 2, c: 3}
 
   f = ({a, r...} = {}) -> [a, r]
   deepEqual [undefined, {}], f()
-  deepEqual [1, {b:2}], f {a:1, b:2}
-  deepEqual [1, {}], f {a:1}
+  deepEqual [1, {b: 2}], f {a: 1, b: 2}
+  deepEqual [1, {}], f {a: 1}
 
-  f = ({a, r...} = {a:1, b:2}) -> [a, r]
+  f = ({a, r...} = {a: 1, b: 2}) -> [a, r]
   deepEqual [1, {b:2}], f()
   deepEqual [2, {}], f {a:2}
   deepEqual [3, {c:5}], f {a:3, c:5}
-  
+
+  f = ({ a: aa = 0, b: bb = 0 }) -> [aa, bb]
+  deepEqual [0, 0], f {}
+  deepEqual [0, 42], f {b:42}
+  deepEqual [42, 0], f {a:42}
+  deepEqual [42, 43], f {a:42, b:43}
+
 test "#4005: `([a = {}]..., b) ->` weirdness", ->
   fn = ([a = {}]..., b) -> [a, b]
   deepEqual fn(5), [{}, 5]
@@ -430,3 +436,39 @@ test "#4566: destructuring with nested default values", ->
   f = ({a: {b = 1}}) ->
     b
   eq 2, f a: b: 2
+
+test "#1043: comma after function glyph", ->
+  x = (a=->, b=2) ->
+    a()
+  eq x(), undefined
+
+  f = (a) -> a()
+  g = f ->, 2
+  eq g, undefined
+  h = f(=>, 2)
+  eq h, undefined
+
+# TODO: uncomment once this syntax works
+# test "#3845/#3446: chain after function glyph", ->
+#   angular = module: -> controller: -> controller: ->
+
+#   eq undefined,
+#     angular.module 'foo'
+#     .controller 'EmailLoginCtrl', ->
+#     .controller 'EmailSignupCtrl', ->
+
+#   beforeEach = (f) -> f()
+#   getPromise = -> then: -> catch: ->
+
+#   eq undefined,
+#     beforeEach ->
+#       getPromise()
+#       .then (@result) =>
+#       .catch (@error) =>
+
+#   doThing = -> then: -> catch: (f) -> f()
+#   handleError = -> 3
+#   eq 3,
+#     doThing()
+#     .then (@result) =>
+#     .catch handleError

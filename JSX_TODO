@@ -1,13 +1,14 @@
 - allow interpolated string attribute values eg %h1( id="recipe-#{ x }" )
 - allow simple unquoted attribute values eg %p( key=i ) (or is this confusing/not preferable to HTML allowing unquoted attribute values?)
-- allow line-ending inline comments after inline elements eg %h1 # this is an h1 tag
 - handle inline element (with or without body?) followed by indent eg:
   if isSomething %abc
     x
 - refine attribute error reporting so that eg %h1( x=[abc] ) will specifically tell you the attribute value is what's wrong
+  - correct error message positions
 - refactor attribute value nested lexing to share code with matchWithInterpolations()
 - compile empty element to eg <a /> instead of <a></a>? is there a semantic difference to JSX and/or HTML?
 - className and other attribute-name translations (automatically camelCase, that's what JSX wants?)
+- allow line-ending inline comments after inline elements eg %h1 # this is an h1 tag
 - allow normal Coffeescript (line) comments inside (indented) element body
 - support object spread operator in all 3 types of attributes
 - handle no-value attributes in () and <> attributes (implicit value is true?)
@@ -25,3 +26,6 @@
 - get for loops that reference @ (inside a JSX expression) to generate properly bound functions
 - handle inline else eg if x then %a else %b
 - shorthand style syntax .[]?
+- handle chain after function glyph eg:
+  x ->
+  .y

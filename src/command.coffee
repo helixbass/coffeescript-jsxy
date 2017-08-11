@@ -25,7 +25,7 @@ hidden = (file) -> /^\.|~$/.test file
 
 # The help banner that is printed in conjunction with `-h`/`--help`.
 BANNER = '''
-  Usage: coffee [options] path/to/script.coffee -- [args]
+  Usage: coffee [options] path/to/script.coffee [args]
 
   If called without options, `coffee` will run your script.
 '''
@@ -69,7 +69,22 @@ exports.buildCSOptionParser = buildCSOptionParser = ->
 # `--` will be passed verbatim to your script as arguments in `process.argv`
 exports.run = ->
   optionParser = buildCSOptionParser()
-  parseOptions()
+  try parseOptions()
+  catch err
+    console.error "option parsing error: #{err.message}"
+    process.exit 1
+
+  if (not opts.doubleDashed) and (opts.arguments[1] is '--')
+    printWarn '''
+      coffee was invoked with '--' as the second positional argument, which is
+      now deprecated. To pass '--' as an argument to a script to run, put an
+      additional '--' before the path to your script.
+
+      '--' will be removed from the argument list.
+    '''
+    printWarn "The positional arguments were: #{JSON.stringify opts.arguments}"
+    opts.arguments = [opts.arguments[0]].concat opts.arguments[2..]
+
   # Make the REPL *CLI* use the global context so as to (a) be consistent with the
   # `node` REPL CLI and, therefore, (b) make packages that modify native prototypes
   # (such as 'colors' and 'sugar') work as expected.
@@ -447,6 +462,9 @@ forkNode = ->
     cwd:        process.cwd()
     env:        process.env
     stdio:      [0, 1, 2]
+  for signal in ['SIGINT', 'SIGTERM']
+    process.on signal, do (signal) ->
+      -> p.kill signal
   p.on 'exit', (code) -> process.exit code
 
 # Print the `--help` usage message and exit. Deprecated switches are not
