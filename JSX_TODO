@@ -24,3 +24,4 @@
 - allow haml-style self-closing tag syntax? eg %hr/
 - get for loops that reference @ (inside a JSX expression) to generate properly bound functions
 - handle inline else eg if x then %a else %b
+- shorthand style syntax .[]?
