@@ -1775,7 +1775,7 @@ exports.Class = class Class extends Base
 
   compileNode: (o) ->
     @name          = @determineName()
-    executableBody = @walkBody(o)
+    executableBody = @walkBody()
 
     # Special handling to allow `class expr.A extends A` declarations
     parentName    = @parent.base.value if @parent instanceof Value and not @parent.hasProperties()
@@ -1811,10 +1811,6 @@ exports.Class = class Class extends Base
     o.indent += TAB
 
     result = []
-    if @assignParentRef
-      result.push @makeCode "("
-      result.push @assignParentRef.compileToFragments(o)...
-      result.push @makeCode ", "
     result.push @makeCode "class "
     result.push @makeCode "#{@name} " if @name
     result.push @makeCode('extends '), @parent.compileToFragments(o)..., @makeCode ' ' if @parent
@@ -1826,8 +1822,6 @@ exports.Class = class Class extends Base
       result.push @body.compileToFragments(o, LEVEL_TOP)...
       result.push @makeCode "\n#{@tab}"
     result.push @makeCode '}'
-    if @assignParentRef
-      result.push @makeCode ")"
 
     result
 
@@ -1847,16 +1841,7 @@ exports.Class = class Class extends Base
       @variable.error message if message
     if name in JS_FORBIDDEN then "_#{name}" else name
 
-  setParentRef: (o) ->
-    return if @_setParentRef
-    @_setParentRef = yes
-
-    if @parent?.shouldCache()
-      ref = new IdentifierLiteral o.scope.freeVariable 'ref'
-      @assignParentRef = new Assign ref, @parent
-      @parent = ref
-
-  walkBody: (o) ->
+  walkBody: () ->
     @ctor          = null
     @boundMethods  = []
     executableBody = null
@@ -3861,7 +3846,6 @@ UTILITIES =
   indexOf: -> '[].indexOf'
   slice  : -> '[].slice'
   splice : -> '[].splice'
-
 
 # Levels indicate a node's position in the AST. Useful for knowing if
 # parens are necessary or superfluous.

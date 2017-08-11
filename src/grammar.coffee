@@ -206,7 +206,6 @@ grammar =
     o 'Identifier'
     o 'Property'
     o 'ThisProperty'
-    o 'ObjDestructIdentifier'
   ]
 
   ObjAssignable: [

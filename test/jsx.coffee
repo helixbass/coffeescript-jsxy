@@ -1,5 +1,5 @@
-# JSX-Haml
-# --------
+# JSXY
+# ----
 
 test 'simple inline element', ->
   # element = %h1 Hello, world!
