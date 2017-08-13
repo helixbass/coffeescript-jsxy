@@ -104,3 +104,7 @@ this to be good practice
 To suggest a feature or report a bug: https://github.com/helixbass/coffeescript-jsxy/issues
 
 The source repository: https://github.com/helixbass/coffeescript-jsxy.git
+
+## License
+
+[MIT](LICENSE)

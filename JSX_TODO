@@ -10,7 +10,7 @@
 - className and other attribute-name translations (automatically camelCase, that's what JSX wants?)
 - allow line-ending inline comments after inline elements eg %h1 # this is an h1 tag
 - allow normal Coffeescript (line) comments inside (indented) element body
-- support object spread operator in all 3 types of attributes
+- support object spread operator (pre and post ...'s?) in all 3 types of attributes
 - handle no-value attributes in () and <> attributes (implicit value is true?)
 - support haml-style nested object attributes? eg ng: { click: ... } - or is that ambiguous w/ possible object-literal value of top-level attribute?
 - handle comments inside object attributes?
@@ -29,3 +29,5 @@
 - handle chain after function glyph eg:
   x ->
   .y
+- handle namespaced (:) element names
+- handle elements as attribute values?
