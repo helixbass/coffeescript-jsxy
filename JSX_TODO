@@ -31,3 +31,4 @@
   .y
 - handle namespaced (:) element names
 - handle elements as attribute values?
+- why isn't jsxy_postfix_if.coffee compiling to FORCE_EXPRESSION?

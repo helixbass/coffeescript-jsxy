@@ -273,6 +273,98 @@ task 'doc:site', 'build the documentation for the website', ->
 task 'doc:site:watch', 'watch and continually rebuild the documentation for the website', ->
   buildDocs yes
 
+buildJSXYDocs = ->
+  # Constants
+  indexFile = 'documentation/index_jsxy.html'
+  versionedSourceFolder = "documentation/v1"
+  sectionsSourceFolder = 'documentation/sections'
+  examplesSourceFolder = 'documentation/examples'
+  outputFolder = "docs/jsxy"
+
+  # Helpers
+  releaseHeader = (date, version, prevVersion) ->
+    monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+    formatDate = (date) ->
+      date.replace /^(\d\d\d\d)-(\d\d)-(\d\d)$/, (match, $1, $2, $3) ->
+        "#{monthNames[$2 - 1]} #{+$3}, #{$1}"
+
+    """
+      <div class="anchor" id="#{version}"></div>
+      <h2 class="header">
+        #{prevVersion and "<a href=\"https://github.com/jashkenas/coffeescript/compare/#{prevVersion}...#{version}\">#{version}</a>" or version}
+        <span class="timestamp"> &mdash; <time datetime="#{date}">#{formatDate date}</time></span>
+      </h2>
+    """
+
+  codeFor = require "./documentation/jsxy/code.coffee"
+
+  htmlFor = ->
+    hljs = require 'highlight.js'
+    hljs.configure classPrefix: ''
+    markdownRenderer = require('markdown-it')
+      html: yes
+      typographer: yes
+      highlight: (str, lang) ->
+        # From https://github.com/markdown-it/markdown-it#syntax-highlighting
+        if lang and hljs.getLanguage(lang)
+          try
+            return hljs.highlight(lang, str).value
+          catch ex
+        return '' # No syntax highlighting
+
+
+    # Add some custom overrides to Markdown-It’s rendering, per
+    # https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
+    defaultFence = markdownRenderer.renderer.rules.fence
+    markdownRenderer.renderer.rules.fence = (tokens, idx, options, env, slf) ->
+      code = tokens[idx].content
+      if code.indexOf('codeFor(') is 0 or code.indexOf('releaseHeader(') is 0
+        "<%= #{code} %>"
+      else
+        "<blockquote class=\"uneditable-code-block\">#{defaultFence.apply @, arguments}</blockquote>"
+
+    (file, bookmark) ->
+      md = fs.readFileSync "#{sectionsSourceFolder}/#{file}.md", 'utf-8'
+      md = md.replace /<%= releaseHeader %>/g, releaseHeader
+      md = md.replace /<%= majorVersion %>/g, majorVersion
+      md = md.replace /<%= fullVersion %>/g, CoffeeScript.VERSION
+      html = markdownRenderer.render md
+      html = _.template(html)
+        codeFor: codeFor()
+        releaseHeader: releaseHeader
+
+  include = ->
+    (file) ->
+      file = "#{versionedSourceFolder}/#{file}" if file.indexOf('/') is -1
+      output = fs.readFileSync file, 'utf-8'
+      if /\.html$/.test(file)
+        render = _.template output
+        output = render
+          releaseHeader: releaseHeader
+          majorVersion: majorVersion
+          fullVersion: CoffeeScript.VERSION
+          htmlFor: htmlFor()
+          codeFor: codeFor()
+          include: include()
+      output
+
+  # Task
+  do renderIndex = ->
+    render = _.template fs.readFileSync(indexFile, 'utf-8')
+    output = render
+      include: include()
+    fs.writeFileSync "#{outputFolder}/index.html", output
+    log 'compiled', green, "#{indexFile} → #{outputFolder}/index.html"
+
+  # if watch
+  #   for target in [indexFile, versionedSourceFolder, examplesSourceFolder, sectionsSourceFolder]
+  #     fs.watch target, interval: 200, renderIndex
+  #   log 'watching...', green
+
+task 'doc:jsxy', 'build the documentation for JSXY', ->
+  buildJSXYDocs()
+
 
 buildDocTests = (watch = no) ->
   # Constants
