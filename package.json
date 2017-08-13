@@ -1,13 +1,17 @@
 {
   "name": "coffeescript-jsxy",
-  "description": "Unfancy JavaScript",
+  "description": "Unfancy JavaScript/JSX",
   "keywords": [
     "javascript",
     "language",
     "coffeescript",
-    "compiler"
+    "compiler",
+    "react"
   ],
-  "author": "Jeremy Ashkenas",
+  "authors": [
+    "Jeremy Ashkenas",
+    "Julian Rosse"
+  ],
   "version": "2.0.0-beta4",
   "license": "MIT",
   "engines": {
@@ -32,11 +36,11 @@
     "test": "node ./bin/cake test",
     "test-harmony": "node --harmony ./bin/cake test"
   },
-  "homepage": "http://coffeescript.org",
-  "bugs": "https://github.com/jashkenas/coffeescript/issues",
+  "homepage": "https://github.com/helixbass/coffeescript-jsxy",
+  "bugs": "https://github.com/helixbass/coffeescript-jsxy/issues",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jashkenas/coffeescript.git"
+    "url": "git://github.com/helixbass/coffeescript-jsxy.git"
   },
   "devDependencies": {
     "babel-core": "~6.25.0",
