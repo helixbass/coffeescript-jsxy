@@ -1,3 +1,12 @@
+# CoffeeScript-JSXY
+
+CoffeeScript-JSXY adds [Haml](http://haml.info)-inspired whitespace-indented JSX syntax to CoffeeScript 2
+
+Here we'll illustrate the new JSXY syntax.
+For other info like installation/background/breaking changes, see
+the `coffeescript-jsxy` [README](https://github.com/helixbass/coffeescript-jsxy/).
+See the CoffeeScript 2 [docs](http://coffeescript.org/v2) for CoffeeScript usage and syntax
+
 ## JSXY
 
 JSXY aims to provide a nicer, whitespace-indented JSX syntax that fits well into

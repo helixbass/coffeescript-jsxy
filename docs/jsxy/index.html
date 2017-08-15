@@ -1,18 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-<title>CoffeeScript JSXY</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<!-- <link rel="canonical" href="http://coffeescript.org" /> -->
-
-<!-- <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> -->
-<!-- <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32"> -->
-<!-- <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16"> -->
-<!-- <link rel="manifest" href="/manifest.json"> -->
-<!-- <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"> -->
-<!-- <meta name="theme-color" content="#ffffff"> -->
-
 <style>
 body {
   font-size: 14px;
@@ -519,12 +504,15 @@ pre .xml .cdata {
 
 </style>
 
-</head>
-<body>
-
 <div id="top" class="container">
   <span class="bookmark" id="jsxy"></span>
-    <h2>JSXY</h2>
+    <h1>CoffeeScript-JSXY</h1>
+<p>CoffeeScript-JSXY adds <a href="http://haml.info">Haml</a>-inspired whitespace-indented JSX syntax to CoffeeScript 2</p>
+<p>Here we’ll illustrate the new JSXY syntax.
+For other info like installation/background/breaking changes, see
+the <code>coffeescript-jsxy</code> <a href="https://github.com/helixbass/coffeescript-jsxy/">README</a>.
+See the CoffeeScript 2 <a href="http://coffeescript.org/v2">docs</a> for CoffeeScript usage and syntax</p>
+<h2>JSXY</h2>
 <p>JSXY aims to provide a nicer, whitespace-indented JSX syntax that fits well into
 CoffeeScript’s existing whitespace-indented style.
 Its syntax is heavily inspired by <a href="http://haml.info">Haml</a>.
@@ -537,94 +525,94 @@ An <code>import React from react</code> will automatically be included
 at the top of the compiled JavaScript module.
 It’s your responsibility to include <code>react</code> in your project.</p>
 <div class='code'><pre><code>%div
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div&gt;&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>Attributes/props can be supplied using <code>{}</code> or <code>()</code>.
 <code>{}</code> attributes are parsed as CoffeeScript objects
 so you can use eg object literal shorthands.</p>
 <div class='code'><pre><code>%input{
-  type: <span class="string">'text'</span>
+  type: &#039;text&#039;
   @onChange
   props...
 }
 
-%Greeting( name=<span class="string">'Juan'</span> )
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+%Greeting( name=&#039;Juan&#039; )
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">{</span>'<span class="attr">text</span>'} <span class="attr">onChange</span>=<span class="string">{this.onChange}</span> {<span class="attr">...props</span>}&gt;</span><span class="tag">&lt;/<span class="name">input</span>&gt;</span></span>;
+&lt;input type={&#039;text&#039;} onChange={this.onChange} {...props}&gt;&lt;/input&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">Greeting</span> <span class="attr">name</span>=<span class="string">'Juan'</span>&gt;</span><span class="tag">&lt;/<span class="name">Greeting</span>&gt;</span></span>;
+&lt;Greeting name=&#039;Juan&#039;&gt;&lt;/Greeting&gt;;
 </code></pre><br class='clear' /></div><p>You can use Haml-style <code>#id</code> and <code>.class</code> shorthands.</p>
-<div class='code'><pre><code><span class="comment">#app</span>
+<div class='code'><pre><code>#app
 
 .container
 
-%h1.heading<span class="comment">#main_title</span>
+%h1.heading#main_title
 
-.col-sm<span class="number">-6.</span>col-md<span class="number">-3</span>
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+.col-sm-6.col-md-3
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">'app'</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div id=&#039;app&#039;&gt;&lt;/div&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">'container'</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div className=&#039;container&#039;&gt;&lt;/div&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">h1</span> <span class="attr">id</span>=<span class="string">'main_title'</span> <span class="attr">className</span>=<span class="string">'heading'</span>&gt;</span><span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span>;
+&lt;h1 id=&#039;main_title&#039; className=&#039;heading&#039;&gt;&lt;/h1&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">'col-sm-6 col-md-3'</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div className=&#039;col-sm-6 col-md-3&#039;&gt;&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>With a <code>.class</code> element that’s directly preceded by CoffeeScript code,
 be careful to leave a blank line to distinguish it from a chained method call.</p>
 <div class='code'><pre><code>a
 
-.b(x=<span class="string">'c'</span>)
+.b(x=&#039;c&#039;)
 
 a
-.b(x=<span class="string">'c'</span>)
-</code></pre><pre><code><span class="keyword">var</span> x;
+.b(x=&#039;c&#039;)
+</code></pre><pre><code>var x;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
 a;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">'b'</span> <span class="attr">x</span>=<span class="string">'c'</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div className=&#039;b&#039; x=&#039;c&#039;&gt;&lt;/div&gt;;
 
-a.b(x = <span class="string">'c'</span>);
+a.b(x = &#039;c&#039;);
 </code></pre><br class='clear' /></div><p>Since JSX allows element names like <code>Form.Field</code>, the second half is
 interpreted as part of the element name if it’s capitalized.</p>
 <div class='code'><pre><code>%Form.Field
 
 %Form.field
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">Form.Field</span>&gt;</span><span class="tag">&lt;/<span class="name">Form.Field</span>&gt;</span>;
+&lt;Form.Field&gt;&lt;/Form.Field&gt;;
 
-<span class="tag">&lt;<span class="name">Form</span> <span class="attr">className</span>=<span class="string">'field'</span>&gt;</span><span class="tag">&lt;/<span class="name">Form</span>&gt;</span>;
-</span></code></pre><br class='clear' /></div><p>If you want to use a capitalized class name, use dynamic class name
+&lt;Form className=&#039;field&#039;&gt;&lt;/Form&gt;;
+</code></pre><br class='clear' /></div><p>If you want to use a capitalized class name, use dynamic class name
 syntax (see below) or a non-shorthand <code>className</code> attribute.</p>
-<div class='code'><pre><code>%div.(<span class="string">'Class1'</span>)
+<div class='code'><pre><code>%div.(&#039;Class1&#039;)
 
-%div{ className: <span class="string">'Class1'</span> }
-</code></pre><pre><code><span class="keyword">import</span> classNames <span class="keyword">from</span> <span class="string">'classnames'</span>;
+%div{ className: &#039;Class1&#039; }
+</code></pre><pre><code>import classNames from &#039;classnames&#039;;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">{classNames(</span>'<span class="attr">Class1</span>')}&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div className={classNames(&#039;Class1&#039;)}&gt;&lt;/div&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">{</span>'<span class="attr">Class1</span>'}&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div className={&#039;Class1&#039;}&gt;&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>If you want to use a non-capitalized dotted component name,
 dereference it first.</p>
 <div class='code'><pre><code>{field: Field} = Form
 
 %Field
-</code></pre><pre><code><span class="keyword">var</span> Field;
+</code></pre><pre><code>var Field;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
 ({
-  <span class="attr">field</span>: Field
+  field: Field
 } = Form);
 
-<span class="xml"><span class="tag">&lt;<span class="name">Field</span>&gt;</span><span class="tag">&lt;/<span class="name">Field</span>&gt;</span></span>;
+&lt;Field&gt;&lt;/Field&gt;;
 </code></pre><br class='clear' /></div><p>For dynamic class names, use <code>.()</code> shorthand.
 This will compile to a call to <code>classNames()</code>,
 so picture the parentheses as surrounding the arguments to <code>classNames()</code>.
@@ -632,32 +620,32 @@ It will also automatically include an <code>import classNames from classnames</c
 at the top of the compiled JavaScript module.
 It’s your responsibility to include <code>classnames</code> in your project.</p>
 <div class='code'><pre><code>%section.(
-  highlighted: index &gt; <span class="number">2</span>
-  <span class="string">'active active-2'</span>: @props.is_active
+  highlighted: index &gt; 2
+  &#039;active active-2&#039;: @props.is_active
 )
-</code></pre><pre><code><span class="keyword">import</span> classNames <span class="keyword">from</span> <span class="string">'classnames'</span>;
+</code></pre><pre><code>import classNames from &#039;classnames&#039;;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">section</span> <span class="attr">className</span>=<span class="string">{classNames({</span>
-  <span class="attr">highlighted:</span> <span class="attr">index</span> &gt;</span> 2,
-  'active active-2': this.props.is_active
-})}&gt;<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span>;
+&lt;section className={classNames({
+  highlighted: index &gt; 2,
+  &#039;active active-2&#039;: this.props.is_active
+})}&gt;&lt;/section&gt;;
 </code></pre><br class='clear' /></div><p>Nest child elements using indentation.</p>
 <div class='code'><pre><code>.row
-  .col-sm<span class="number">-3</span>
-    %h1( title=<span class="string">'Accounts'</span> ) Accounts
+  .col-sm-3
+    %h1( title=&#039;Accounts&#039; ) Accounts
     %Accounts{ accounts: @props.all_accounts }
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">'row'</span>&gt;</span>
-  <span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">'col-sm-3'</span>&gt;</span>
-    <span class="tag">&lt;<span class="name">h1</span> <span class="attr">title</span>=<span class="string">'Accounts'</span>&gt;</span>
+&lt;div className=&#039;row&#039;&gt;
+  &lt;div className=&#039;col-sm-3&#039;&gt;
+    &lt;h1 title=&#039;Accounts&#039;&gt;
       Accounts
-    <span class="tag">&lt;/<span class="name">h1</span>&gt;</span>
-    <span class="tag">&lt;<span class="name">Accounts</span> <span class="attr">accounts</span>=<span class="string">{this.props.all_accounts}</span>&gt;</span><span class="tag">&lt;/<span class="name">Accounts</span>&gt;</span>
-  <span class="tag">&lt;/<span class="name">div</span>&gt;</span>
-<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+    &lt;/h1&gt;
+    &lt;Accounts accounts={this.props.all_accounts}&gt;&lt;/Accounts&gt;
+  &lt;/div&gt;
+&lt;/div&gt;;
 </code></pre><br class='clear' /></div><h4>Text content</h4>
 <p>Text content can be indented or inline.</p>
 <div class='code'><pre><code>%h1 Greetings
@@ -665,31 +653,31 @@ It’s your responsibility to include <code>classnames</code> in your project.</
 %p
   Welcome to Top Notch Hotels.
   We hope you enjoy your stay
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>
+&lt;h1&gt;
   Greetings
-<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span>;
+&lt;/h1&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">p</span>&gt;</span>
+&lt;p&gt;
   Welcome to Top Notch Hotels.
   We hope you enjoy your stay
-<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span>;
+&lt;/p&gt;;
 </code></pre><br class='clear' /></div><h4>Expressions</h4>
 <p>To include expressions, use JSX-style <code>{}</code> or Haml-style <code>=</code>.</p>
 <div class='code'><pre><code>%h1= page_title
 
 %h2
   Welcome, {name}!
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>
+&lt;h1&gt;
   {page_title}
-<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span>;
+&lt;/h1&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">h2</span>&gt;</span>
+&lt;h2&gt;
   Welcome, {name}!
-<span class="tag">&lt;/<span class="name">h2</span>&gt;</span></span>;
+&lt;/h2&gt;;
 </code></pre><br class='clear' /></div><p>Since (in React) expressions/elements on adjacent lines won’t be
 separated by any whitespace by default, there’s a <code>^</code> operator to
 force an expression or element to include a surrounding space between
@@ -697,155 +685,155 @@ itself and preceding/following siblings.</p>
 <div class='code'><pre><code>%p
   Oh man,
   =^ name
-  <span class="keyword">is</span> going to
-  %strong{ style: fontSize: <span class="string">'2em'</span> }^
+  is going to
+  %strong{ style: fontSize: &#039;2em&#039; }^
     = action
-  <span class="keyword">when</span> he finds out!
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+  when he finds out!
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">p</span>&gt;</span>
-  Oh man, {name} is going to <span class="tag">&lt;<span class="name">strong</span> <span class="attr">style</span>=<span class="string">{{</span>
-    <span class="attr">fontSize:</span> '<span class="attr">2em</span>'
-  }}&gt;</span>
+&lt;p&gt;
+  Oh man, {name} is going to &lt;strong style={{
+    fontSize: &#039;2em&#039;
+  }}&gt;
     {action}
-  <span class="tag">&lt;/<span class="name">strong</span>&gt;</span> when he finds out!
-<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span>;
+  &lt;/strong&gt; when he finds out!
+&lt;/p&gt;;
 </code></pre><br class='clear' /></div><p>Since in CoffeeScript “everything is an expression”, you get some
 much nicer/more natural ways of doing things than in straight JSX/ES6.
 To conditionally render a subcomponent, use <code>if</code>.</p>
 <div class='code'><pre><code>%div
-  = <span class="keyword">if</span> headerText
+  = if headerText
     %Header{ headerText }
-</code></pre><pre><code><span class="keyword">var</span> FORCE_EXPRESSION;
+</code></pre><pre><code>var FORCE_EXPRESSION;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>
-  {FORCE_EXPRESSION = (headerText ? <span class="tag">&lt;<span class="name">Header</span> <span class="attr">headerText</span>=<span class="string">{headerText}</span>&gt;</span><span class="tag">&lt;/<span class="name">Header</span>&gt;</span> : void 0)}
-<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div&gt;
+  {FORCE_EXPRESSION = (headerText ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
+&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>You can use any of the CoffeeScript conditional syntaxes, like <code>unless</code>.</p>
 <div class='code'><pre><code>%div
-  = <span class="keyword">unless</span> dontIncludeHeader
+  = unless dontIncludeHeader
     %Header{ headerText }
-</code></pre><pre><code><span class="keyword">var</span> FORCE_EXPRESSION;
+</code></pre><pre><code>var FORCE_EXPRESSION;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>
-  {FORCE_EXPRESSION = (!dontIncludeHeader ? <span class="tag">&lt;<span class="name">Header</span> <span class="attr">headerText</span>=<span class="string">{headerText}</span>&gt;</span><span class="tag">&lt;/<span class="name">Header</span>&gt;</span> : void 0)}
-<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div&gt;
+  {FORCE_EXPRESSION = (!dontIncludeHeader ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
+&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>Or inline postfix <code>if</code>/<code>unless</code>.</p>
 <div class='code'><pre><code>%div
-  = %Header{ headerText } <span class="keyword">if</span> headerText?
-  = %Footer <span class="keyword">unless</span> dontIncludeFooter
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+  = %Header{ headerText } if headerText?
+  = %Footer unless dontIncludeFooter
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>
-  {  if (typeof headerText !== "undefined" &amp;&amp; headerText !== null) {
-    <span class="tag">&lt;<span class="name">Header</span> <span class="attr">headerText</span>=<span class="string">{headerText}</span>&gt;</span><span class="tag">&lt;/<span class="name">Header</span>&gt;</span>;
+&lt;div&gt;
+  {  if (typeof headerText !== &quot;undefined&quot; &amp;&amp; headerText !== null) {
+    &lt;Header headerText={headerText}&gt;&lt;/Header&gt;;
   }}
   {  if (!dontIncludeFooter) {
-    <span class="tag">&lt;<span class="name">Footer</span>&gt;</span><span class="tag">&lt;/<span class="name">Footer</span>&gt;</span>;
+    &lt;Footer&gt;&lt;/Footer&gt;;
   }}
-<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>For alternatives, use <code>else</code>/<code>else if</code>.
 As of now, when using <code>=</code> syntax, you must
 indent your <code>else</code>/<code>else if</code> lines relative to the initial <code>= if</code> line.</p>
 <div class='code'><pre><code>%div
-  = <span class="keyword">if</span> loggedIn
+  = if loggedIn
     %Welcome
-   <span class="keyword">else</span> <span class="keyword">if</span> forbidden
+   else if forbidden
     %GoAway
-   <span class="keyword">else</span>
+   else
     %Login
-</code></pre><pre><code><span class="keyword">var</span> FORCE_EXPRESSION;
+</code></pre><pre><code>var FORCE_EXPRESSION;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>
-  {FORCE_EXPRESSION = (loggedIn ? <span class="tag">&lt;<span class="name">Welcome</span>&gt;</span><span class="tag">&lt;/<span class="name">Welcome</span>&gt;</span> : forbidden ? <span class="tag">&lt;<span class="name">GoAway</span>&gt;</span><span class="tag">&lt;/<span class="name">GoAway</span>&gt;</span> : <span class="tag">&lt;<span class="name">Login</span>&gt;</span><span class="tag">&lt;/<span class="name">Login</span>&gt;</span>)}
-<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+&lt;div&gt;
+  {FORCE_EXPRESSION = (loggedIn ? &lt;Welcome&gt;&lt;/Welcome&gt; : forbidden ? &lt;GoAway&gt;&lt;/GoAway&gt; : &lt;Login&gt;&lt;/Login&gt;)}
+&lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>Or use CoffeeScript’s very nice <code>switch</code> syntax.</p>
-<div class='code'><pre><code><span class="function"><span class="title">Home</span> = <span class="params">({loggedIn, forbidden})</span> -&gt;</span>
+<div class='code'><pre><code>Home = ({loggedIn, forbidden}) -&gt;
   %div
-    = <span class="keyword">switch</span>
-      <span class="keyword">when</span> loggedIn  <span class="keyword">then</span> %Welcome
-      <span class="keyword">when</span> forbidden <span class="keyword">then</span> %GoAway
-      <span class="keyword">else</span>                %Login
-</code></pre><pre><code><span class="keyword">var</span> Home;
+    = switch
+      when loggedIn  then %Welcome
+      when forbidden then %GoAway
+      else                %Login
+</code></pre><pre><code>var Home;
 
-<span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+import React from &#039;react&#039;;
 
-Home = <span class="function"><span class="keyword">function</span>(<span class="params">{loggedIn, forbidden}</span>) </span>{
-  <span class="keyword">var</span> FORCE_EXPRESSION;
-  <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span>
+Home = function({loggedIn, forbidden}) {
+  var FORCE_EXPRESSION;
+  return &lt;div&gt;
     {FORCE_EXPRESSION = ((function() {
       switch (false) {
         case !loggedIn:
-          return <span class="tag">&lt;<span class="name">Welcome</span>&gt;</span><span class="tag">&lt;/<span class="name">Welcome</span>&gt;</span>;
+          return &lt;Welcome&gt;&lt;/Welcome&gt;;
         case !forbidden:
-          return <span class="tag">&lt;<span class="name">GoAway</span>&gt;</span><span class="tag">&lt;/<span class="name">GoAway</span>&gt;</span>;
+          return &lt;GoAway&gt;&lt;/GoAway&gt;;
         default:
-          return <span class="tag">&lt;<span class="name">Login</span>&gt;</span><span class="tag">&lt;/<span class="name">Login</span>&gt;</span>;
+          return &lt;Login&gt;&lt;/Login&gt;;
       }
     })())}
-  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>;
+  &lt;/div&gt;;
 };
 </code></pre><br class='clear' /></div><p>To loop over child components, you can use <code>for</code> (rather than having to use <code>.map(callback)</code>).</p>
-<div class='code'><pre><code>render: <span class="function">-&gt;</span>
+<div class='code'><pre><code>render: -&gt;
   {steps} = @props
 
   %ul.steps-container
-    = <span class="keyword">for</span> {ingredients, description}, i <span class="keyword">in</span> steps
+    = for {ingredients, description}, i in steps
       %Step{
         ingredients, description
         key: i
       }
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
 ({
-  <span class="attr">render</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-    <span class="keyword">var</span> FORCE_EXPRESSION, description, i, ingredients, steps;
-    ({steps} = <span class="keyword">this</span>.props);
-    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">ul</span> <span class="attr">className</span>=<span class="string">'steps-container'</span>&gt;</span>
+  render: function() {
+    var FORCE_EXPRESSION, description, i, ingredients, steps;
+    ({steps} = this.props);
+    return &lt;ul className=&#039;steps-container&#039;&gt;
       {FORCE_EXPRESSION = (function() {
         var j, len, results;
         results = [];
-        for (i = j = 0, len = steps.length; j <span class="tag">&lt; <span class="attr">len</span>; <span class="attr">i</span> = <span class="string">++j)</span> {
-          ({<span class="attr">ingredients</span>, <span class="attr">description</span>} = <span class="string">steps[i]);</span>
-          <span class="attr">results.push</span>(&lt;<span class="attr">Step</span> <span class="attr">ingredients</span>=<span class="string">{ingredients}</span> <span class="attr">description</span>=<span class="string">{description}</span> <span class="attr">key</span>=<span class="string">{i}</span>&gt;</span><span class="tag">&lt;/<span class="name">Step</span>&gt;</span>);
+        for (i = j = 0, len = steps.length; j &lt; len; i = ++j) {
+          ({ingredients, description} = steps[i]);
+          results.push(&lt;Step ingredients={ingredients} description={description} key={i}&gt;&lt;/Step&gt;);
         }
         return results;
       })()}
-    <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span>;
+    &lt;/ul&gt;;
   }
 });
 </code></pre><br class='clear' /></div><p>Or use inline postfix <code>for</code>.</p>
-<div class='code'><pre><code>render: <span class="function">-&gt;</span>
+<div class='code'><pre><code>render: -&gt;
   {steps} = @props
 
   %ul.steps-container
     = %Step{
       ingredients, description
       key: i
-    } <span class="keyword">for</span> {ingredients, description}, i <span class="keyword">in</span> steps
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+    } for {ingredients, description}, i in steps
+</code></pre><pre><code>import React from &#039;react&#039;;
 
 ({
-  <span class="attr">render</span>: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-    <span class="keyword">var</span> FORCE_EXPRESSION, description, i, ingredients, steps;
-    ({steps} = <span class="keyword">this</span>.props);
-    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">ul</span> <span class="attr">className</span>=<span class="string">'steps-container'</span>&gt;</span>
+  render: function() {
+    var FORCE_EXPRESSION, description, i, ingredients, steps;
+    ({steps} = this.props);
+    return &lt;ul className=&#039;steps-container&#039;&gt;
       {FORCE_EXPRESSION = (function() {
         var j, len, results;
         results = [];
-        for (i = j = 0, len = steps.length; j <span class="tag">&lt; <span class="attr">len</span>; <span class="attr">i</span> = <span class="string">++j)</span> {
-          ({<span class="attr">ingredients</span>, <span class="attr">description</span>} = <span class="string">steps[i]);</span>
-          <span class="attr">results.push</span>(&lt;<span class="attr">Step</span> <span class="attr">ingredients</span>=<span class="string">{ingredients}</span> <span class="attr">description</span>=<span class="string">{description}</span> <span class="attr">key</span>=<span class="string">{i}</span>&gt;</span><span class="tag">&lt;/<span class="name">Step</span>&gt;</span>);
+        for (i = j = 0, len = steps.length; j &lt; len; i = ++j) {
+          ({ingredients, description} = steps[i]);
+          results.push(&lt;Step ingredients={ingredients} description={description} key={i}&gt;&lt;/Step&gt;);
         }
         return results;
       })()}
-    <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span>;
+    &lt;/ul&gt;;
   }
 });
 </code></pre><br class='clear' /></div><p>Angular-style <code>|</code> filters are also supported inside JSXY expressions.
@@ -854,121 +842,16 @@ You don’t have to specially register filters like in Angular, any function can
 as a filter.</p>
 <div class='code'><pre><code>%a ${amount | currency}
 
-%strong= octalVal | parseInt ~ <span class="number">8</span>
-</code></pre><pre><code><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;
+%strong= octalVal | parseInt ~ 8
+</code></pre><pre><code>import React from &#039;react&#039;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">a</span>&gt;</span>
+&lt;a&gt;
   ${currency(amount)}
-<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span>;
+&lt;/a&gt;;
 
-<span class="xml"><span class="tag">&lt;<span class="name">strong</span>&gt;</span>
+&lt;strong&gt;
   {parseInt(octalVal, 8)}
-<span class="tag">&lt;/<span class="name">strong</span>&gt;</span></span>;
+&lt;/strong&gt;;
 </code></pre><br class='clear' /></div>
 </div>
 
-
-<script type="text/coffeescript">
-sourceFragment = "try:"
-
-# Set up the compilation function, to run when you stop typing.
-compileSource = ->
-  source = $('#repl_source').val()
-  results = $('#repl_results')
-  window.compiledJS = ''
-  try
-    window.compiledJS = CoffeeScript.compile source, bare: on
-    el = results[0]
-    if el.innerText
-      el.innerText = window.compiledJS
-    else
-      results.text(window.compiledJS)
-    results.removeClass 'error'
-    $('.minibutton.run').removeClass 'error'
-  catch {location, message}
-    if location?
-      message = "Error on line #{location.first_line + 1}: #{message}"
-    results.text(message).addClass 'error'
-    $('.minibutton.run').addClass 'error'
-
-  # Update permalink
-  $('#repl_permalink').attr 'href', "##{sourceFragment}#{encodeURIComponent source}"
-
-# Listen for keypresses and recompile.
-$('#repl_source').keyup -> compileSource()
-
-# Use tab key to insert tabs
-$('#repl_source').keydown (e) ->
-  if e.keyCode is 9
-    e.preventDefault()
-    textbox = e.target
-    # Insert tab character at caret or in selection
-    textbox.value = textbox.value[0...textbox.selectionStart] + "\t" + textbox.value[textbox.selectionEnd...]
-    # Put caret in correct position
-    textbox.selectionEnd = ++textbox.selectionStart
-
-# Eval the compiled js.
-evalJS = ->
-  try
-    eval window.compiledJS
-  catch error then alert error
-
-# Load the console with a string of CoffeeScript.
-window.loadConsole = (coffee) ->
-  $('#repl_source').val coffee
-  compileSource()
-  $('.navigation.try').addClass('active')
-  false
-
-# Helper to hide the menus.
-closeMenus = ->
-  $('.navigation.active').removeClass 'active'
-
-$('.minibutton.run').click -> evalJS()
-
-# Bind navigation buttons to open the menus.
-$('.navigation').click (e) ->
-  return if e.target.tagName.toLowerCase() is 'a'
-  return false if $(e.target).closest('.repl_wrapper').length
-  if $(this).hasClass('active')
-    closeMenus()
-  else
-    closeMenus()
-    $(this).addClass 'active'
-  false
-
-$(document).on 'click', '[href="#try"]', (e) ->
-  $('.navigation.try').addClass 'active'
-
-# Dismiss console if Escape pressed or click falls outside console
-# Trigger Run button on Ctrl-Enter
-$(document.body)
-  .keydown (e) ->
-    closeMenus() if e.which == 27
-    evalJS() if e.which == 13 and (e.metaKey or e.ctrlKey) and $('.minibutton.run:visible').length
-  .click (e) ->
-    return false if $(e.target).hasClass('minibutton')
-    closeMenus()
-
-$('#open_webchat').click ->
-  $(this).replaceWith $('<iframe src="http://webchat.freenode.net/?channels=coffeescript" width="625" height="400"></iframe>')
-
-$("#repl_permalink").click (e) ->
-    window.location = $(this).attr("href")
-    false
-
-# If source code is included in location.hash, display it.
-hash = decodeURIComponent location.hash.replace(/^#/, '')
-if hash.indexOf(sourceFragment) == 0
-    src = hash.substr sourceFragment.length
-    loadConsole src
-
-compileSource()
-
-</script>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="v2/browser-compiler/coffeescript.js"></script>
-
-</body>
-</html>

@@ -54,18 +54,10 @@ It includes support for standard (non-whitespace-indented) JSX syntax out of the
 ### Enter JSXY
 JSXY aims to provide a nicer, whitespace-indented JSX syntax that fits well into
 CoffeeScript's existing whitespace-indented style.
-Its syntax is heavily inspired by [Haml](http://haml.info).
-Standard JSX syntax is also supported.
-Let's take a look (compiled JS output on right)
-#### Elements
-Create JSX elements with `%element` syntax
 
-| <pre>  | <pre>          |
-|   %div |   <div></div>; |
-| </pre> | </pre>         |
-
-Child
-
+See the [project page](http://helixbass.net/projects/jsxy) for
+a detailed explanation of JSXY syntax and examples with 
+side-by-side compiled JavaScript
 
 ## Breaking changes
 While breaking changes are relatively minimal,
