@@ -4,7 +4,6 @@
   if isSomething %abc
     x
 - refine attribute error reporting so that eg %h1( x=[abc] ) will specifically tell you the attribute value is what's wrong
-  - correct error message positions
 - refactor attribute value nested lexing to share code with matchWithInterpolations()
 - compile empty element to eg <a /> instead of <a></a>? is there a semantic difference to JSX and/or HTML?
 - className and other attribute-name translations (automatically camelCase, that's what JSX wants?)
@@ -23,7 +22,6 @@
     else
       %def
 - allow haml-style self-closing tag syntax? eg %hr/
-- get for loops that reference @ (inside a JSX expression) to generate properly bound functions
 - handle inline else eg if x then %a else %b
 - shorthand style syntax .[]?
 - handle chain after function glyph eg:
@@ -31,4 +29,3 @@
   .y
 - handle namespaced (:) element names
 - handle elements as attribute values?
-- why isn't jsxy_postfix_if.coffee compiling to FORCE_EXPRESSION?

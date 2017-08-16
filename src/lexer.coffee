@@ -303,8 +303,12 @@ exports.Lexer = class Lexer
   # Matches JSX(-Haml) elements
   jsxToken: ->
     originalChunk = @chunk
+    [originalChunkLine, originalChunkColumn] = [@chunkLine, @chunkColumn]
     return 0 unless @matchJsxElement({topLevel: yes})
-    originalChunk.length - @chunk.length
+    [@chunkLine, @chunkColumn] = [originalChunkLine, originalChunkColumn]
+    consumedChunk = @chunk
+    @chunk = originalChunk
+    @chunk.length - consumedChunk.length
 
   consumeChunk: (length) ->
     return unless length
