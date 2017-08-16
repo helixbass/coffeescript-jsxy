@@ -725,12 +725,8 @@ To conditionally render a subcomponent, use <code>if</code>.</p>
 </code></pre><pre><code>import React from &#039;react&#039;;
 
 &lt;div&gt;
-  {  if (typeof headerText !== &quot;undefined&quot; &amp;&amp; headerText !== null) {
-    &lt;Header headerText={headerText}&gt;&lt;/Header&gt;;
-  }}
-  {  if (!dontIncludeFooter) {
-    &lt;Footer&gt;&lt;/Footer&gt;;
-  }}
+  {(typeof headerText !== &quot;undefined&quot; &amp;&amp; headerText !== null ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
+  {(!dontIncludeFooter ? &lt;Footer&gt;&lt;/Footer&gt; : void 0)}
 &lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>For alternatives, use <code>else</code>/<code>else if</code>.
 As of now, when using <code>=</code> syntax, you must

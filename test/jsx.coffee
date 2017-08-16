@@ -946,6 +946,21 @@ test 'dotted element name', ->
     '''
   )
 
+test 'postfix if expression', ->
+  eqJS(
+    '''
+    %div
+      = %Header if headerText?
+    '''
+    '''
+    import React from 'react';
+
+    <div>
+      {(typeof headerText !== "undefined" && headerText !== null ? <Header></Header> : void 0)}
+    </div>;
+    '''
+  )
+
 # test 'styled-components template literal', ->
 #   eqJS(
 #     '''

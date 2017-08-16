@@ -776,7 +776,7 @@ exports.Lexer = class Lexer
       return {}
 
   jsxForceExpression: ({nested, inset = 0}) ->
-    return unless (token for token in nested when token[0] in ['FOR', 'SWITCH', 'WHILE', 'UNTIL', 'IF']).length
+    return unless (token for token in nested when token[0] in ['FOR', 'SWITCH', 'WHILE', 'UNTIL', 'IF', 'POST_IF']).length
 
     nested.splice inset, 0,
       @makeToken '(', '(', 0, 0
