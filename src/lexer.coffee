@@ -779,8 +779,6 @@ exports.Lexer = class Lexer
     return unless (token for token in nested when token[0] in ['FOR', 'SWITCH', 'WHILE', 'UNTIL', 'IF']).length
 
     nested.splice inset, 0,
-      @makeToken 'IDENTIFIER', 'FORCE_EXPRESSION', 0, 0
-      @makeToken '=', '=', 0, 0
       @makeToken '(', '(', 0, 0
     nested.splice nested.length - inset, 0,
       @makeToken ')', ')', 0, 0

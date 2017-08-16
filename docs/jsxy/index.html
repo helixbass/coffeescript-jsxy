@@ -704,23 +704,19 @@ To conditionally render a subcomponent, use <code>if</code>.</p>
 <div class='code'><pre><code>%div
   = if headerText
     %Header{ headerText }
-</code></pre><pre><code>var FORCE_EXPRESSION;
-
-import React from &#039;react&#039;;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
 &lt;div&gt;
-  {FORCE_EXPRESSION = (headerText ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
+  {(headerText ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
 &lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>You can use any of the CoffeeScript conditional syntaxes, like <code>unless</code>.</p>
 <div class='code'><pre><code>%div
   = unless dontIncludeHeader
     %Header{ headerText }
-</code></pre><pre><code>var FORCE_EXPRESSION;
-
-import React from &#039;react&#039;;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
 &lt;div&gt;
-  {FORCE_EXPRESSION = (!dontIncludeHeader ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
+  {(!dontIncludeHeader ? &lt;Header headerText={headerText}&gt;&lt;/Header&gt; : void 0)}
 &lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>Or inline postfix <code>if</code>/<code>unless</code>.</p>
 <div class='code'><pre><code>%div
@@ -746,12 +742,10 @@ indent your <code>else</code>/<code>else if</code> lines relative to the initial
     %GoAway
    else
     %Login
-</code></pre><pre><code>var FORCE_EXPRESSION;
-
-import React from &#039;react&#039;;
+</code></pre><pre><code>import React from &#039;react&#039;;
 
 &lt;div&gt;
-  {FORCE_EXPRESSION = (loggedIn ? &lt;Welcome&gt;&lt;/Welcome&gt; : forbidden ? &lt;GoAway&gt;&lt;/GoAway&gt; : &lt;Login&gt;&lt;/Login&gt;)}
+  {(loggedIn ? &lt;Welcome&gt;&lt;/Welcome&gt; : forbidden ? &lt;GoAway&gt;&lt;/GoAway&gt; : &lt;Login&gt;&lt;/Login&gt;)}
 &lt;/div&gt;;
 </code></pre><br class='clear' /></div><p>Or use CoffeeScript’s very nice <code>switch</code> syntax.</p>
 <div class='code'><pre><code>Home = ({loggedIn, forbidden}) -&gt;
@@ -765,9 +759,8 @@ import React from &#039;react&#039;;
 import React from &#039;react&#039;;
 
 Home = function({loggedIn, forbidden}) {
-  var FORCE_EXPRESSION;
   return &lt;div&gt;
-    {FORCE_EXPRESSION = ((function() {
+    {((function() {
       switch (false) {
         case !loggedIn:
           return &lt;Welcome&gt;&lt;/Welcome&gt;;
@@ -793,10 +786,10 @@ Home = function({loggedIn, forbidden}) {
 
 ({
   render: function() {
-    var FORCE_EXPRESSION, description, i, ingredients, steps;
+    var description, i, ingredients, steps;
     ({steps} = this.props);
     return &lt;ul className=&#039;steps-container&#039;&gt;
-      {FORCE_EXPRESSION = (function() {
+      {(function() {
         var j, len, results;
         results = [];
         for (i = j = 0, len = steps.length; j &lt; len; i = ++j) {
@@ -821,10 +814,10 @@ Home = function({loggedIn, forbidden}) {
 
 ({
   render: function() {
-    var FORCE_EXPRESSION, description, i, ingredients, steps;
+    var description, i, ingredients, steps;
     ({steps} = this.props);
     return &lt;ul className=&#039;steps-container&#039;&gt;
-      {FORCE_EXPRESSION = (function() {
+      {(function() {
         var j, len, results;
         results = [];
         for (i = j = 0, len = steps.length; j &lt; len; i = ++j) {

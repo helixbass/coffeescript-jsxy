@@ -161,12 +161,12 @@ test 'equals for loop', ->
         %b= x
     '''
     '''
-    var FORCE_EXPRESSION, x;
+    var x;
 
     import React from 'react';
 
     <h1>
-      {FORCE_EXPRESSION = (function() {
+      {(function() {
         var i, len, ref, results;
         ref = ['a', 'b', 'c'];
         results = [];
@@ -366,14 +366,14 @@ test 'element enders', ->
       %b unless c
     '''
     '''
-    var FORCE_EXPRESSION, x, y, z;
+    var x, y, z;
 
     import React from 'react';
 
     x(<h1></h1>, 2);
 
     <h2>
-      {FORCE_EXPRESSION = (a ? <a></a> : <b></b>)}
+      {(a ? <a></a> : <b></b>)}
     </h2>;
 
     [<a></a>, <b></b>];
@@ -538,13 +538,13 @@ test 'all together now', ->
     import React from 'react';
 
     Recipe = function({name, ingredients, steps}) {
-      var FORCE_EXPRESSION, i;
+      var i;
       return <section id={name.toLowerCase().replace(/ /g, '-')}>
         <h1>
           {name}
         </h1>
         <ul className='ingredients'>
-          {FORCE_EXPRESSION = (function() {
+          {(function() {
             var j, len, results;
             results = [];
             for (i = j = 0, len = ingredients.length; j < len; i = ++j) {
@@ -580,7 +580,7 @@ test 'indented = expression following outdent', ->
       = %Appt{ appt, key: appt.id } for appt in data.appts
     '''
     '''
-    var FORCE_EXPRESSION, appt;
+    var appt;
 
     import React from 'react';
 
@@ -588,7 +588,7 @@ test 'indented = expression following outdent', ->
       <thead>
         <tr></tr>
       </thead>
-      {FORCE_EXPRESSION = (function() {
+      {(function() {
         var i, len, ref, results;
         ref = data.appts;
         results = [];
@@ -625,12 +625,10 @@ test 'leading dot class after if', ->
         .small
     '''
     '''
-    var FORCE_EXPRESSION;
-
     import React from 'react';
 
     <div>
-      {FORCE_EXPRESSION = (a ? <div className='small'></div> : void 0)}
+      {(a ? <div className='small'></div> : void 0)}
     </div>;
     '''
   )
@@ -707,12 +705,10 @@ test 'allow closer at same indent', ->
       }
     '''
     '''
-    var FORCE_EXPRESSION;
-
     import React from 'react';
 
     <h1>
-      {FORCE_EXPRESSION = a(b ? 1 : 2)}
+      {a(b ? 1 : 2)}
     </h1>;
 
     <h2>
