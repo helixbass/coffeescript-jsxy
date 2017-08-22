@@ -342,7 +342,7 @@ exports.Lexer = class Lexer
     originalIndent = @indent
     followsWhitespace = followsNewline
     loop
-      {popLevels, trailingWhitespace: followsWhitespace} =
+      {popLevels, trailingWhitespace: followsWhitespace, noMatch} =
         @matchJsxElementIndentedChild {followsNewline, followsWhitespace, preserveWhitespace: not indentedBody}
       errorExpectedEndTag() if popLevels or not @chunk or (outdentNext = 'outdent' is @lineToken(dry: yes)) and not indentedBody
       if outdentNext
@@ -355,7 +355,7 @@ exports.Lexer = class Lexer
         @token 'JSX_END_TAG', endTag
         @consumeChunk endTag.length
         return {}
-      # TODO: error on stray <
+      @error "unexpected <" if noMatch and /// ^ < ///.exec(@chunk)
       errorExpectedEndTag() if justOutdented and @indent < originalIndent
       followsNewline = @lineToken(dry: yes)
 
@@ -509,7 +509,7 @@ exports.Lexer = class Lexer
     @consumeChunk @lineToken() # consume indent
     followsNewline = followsWhitespace = yes
     loop
-      {popLevels, trailingWhitespace: followsWhitespace} = @matchJsxElementIndentedChild {followsNewline, followsWhitespace}
+      {popLevels, trailingWhitespace: followsWhitespace, noMatch} = @matchJsxElementIndentedChild {followsNewline, followsWhitespace}
       if popLevels
         @token 'TERMINATOR', '\n', 0, 0 if topLevel
         return popLevels: popLevels - 1
@@ -518,7 +518,7 @@ exports.Lexer = class Lexer
         @consumeChunk consumed
         return popLevels: numOutdents - 1
       followsNewline = @lineToken(dry: yes) or popLevels?
-    # TODO: error on stray <
+      @error "unexpected <" if noMatch and /// ^ < ///.exec(@chunk)
 
   matchJsxInlineBody: ({elementName, consumedWhitespace}) ->
     match = JSX_ELEMENT_INLINE_EQUALS_EXPRESSION.exec(@chunk)
@@ -789,7 +789,7 @@ exports.Lexer = class Lexer
 
   matchJsxElementIndentedContentLine: ({preserveWhitespace, followsNewline}) ->
     [match, content] = JSX_ELEMENT_INDENTED_CONTENT_LINE.exec(@chunk)
-    return {} unless match.length
+    return {noMatch: yes} unless match.length
     trailingWhitespace = TRAILING_SPACES.exec match
     if preserveWhitespace or not followsNewline
       content = match

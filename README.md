@@ -29,6 +29,9 @@ npm install coffeescript-jsxy
 
 To swap out CoffeeScript proper for CoffeeScript-JSXY on an existing project, replace your `coffeescript` (or the older 1.x `coffee-script`) dependency with `coffeescript-jsxy`. As of now, uses the same `coffee` binary name as CoffeeScript
 
+If you use [Webpack](http://webpack.js.org), use [`coffee-jsxy-loader`](https://github.com/helixbass/coffee-jsxy-loader)
+instead of `coffee-loader`
+
 ## Getting Started
 
 CoffeeScript-JSXY is built on CoffeeScript 2.

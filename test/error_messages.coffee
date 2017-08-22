@@ -1648,3 +1648,34 @@ test "#3199: error message for throw indented comprehension", ->
       x for x in [1, 2, 3]
       ^
   '''
+
+test "JSXY: stray < inside element text content", ->
+  assertErrorFormat '''
+    %ul
+      %li User experience <==> enlightenment
+  ''', '''
+    [stdin]:2:23: error: unexpected <
+      %li User experience <==> enlightenment
+                          ^
+  '''
+
+test "JSXY: stray < inside element indented text content", ->
+  assertErrorFormat '''
+    %div
+      User experience <==> enlightenment
+  ''', '''
+    [stdin]:2:19: error: unexpected <
+      User experience <==> enlightenment
+                      ^
+  '''
+
+test "JSXY: stray < inside tag indented text content", ->
+  assertErrorFormat '''
+    <div>
+      User experience <==> enlightenment
+    </div>
+  ''', '''
+    [stdin]:2:19: error: unexpected <
+      User experience <==> enlightenment
+                      ^
+  '''

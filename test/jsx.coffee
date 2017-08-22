@@ -995,7 +995,6 @@ test 'postfix if expression', ->
 #     '''
 #   )
 # TODO:
-# errors on stray <
 # error tests:
 # - no whitespace before element body
 # - outdented end tag, expression }, ...
