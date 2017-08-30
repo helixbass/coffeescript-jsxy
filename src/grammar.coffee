@@ -580,6 +580,7 @@ grammar =
   JsxElementShorthandClass: [
     o 'JSX_CLASS_SHORTHAND_SYMBOL JSX_CLASS_SHORTHAND', -> $2
     o 'JSX_CLASS_SHORTHAND_SYMBOL Arguments',           -> $2
+    o 'JSX_CLASS_SHORTHAND_SYMBOL Array',               -> $2
   ]
 
   JsxAttributes: [

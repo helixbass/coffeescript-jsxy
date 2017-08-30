@@ -1287,6 +1287,22 @@ exports.JsxElement = class JsxElement extends Base
       {classes} = @shorthands
       return [] unless classes.length
       hasInterpretedClasses = classes.some (klass) -> Array.isArray klass
+      styleShorthand = do ->
+        return klass for klass in classes when klass instanceof Arr
+      if styleShorthand?
+        classes = (klass for klass in classes when klass not instanceof Arr)
+        (@objAttributes ?= new JsxAttributesObj).properties.push(
+          new Assign(
+            new Value new IdentifierLiteral('style')
+            if styleShorthand.objects.length > 1
+              styleShorthand # TODO: how to handle this for React (ie non-React-Native)? translate to "cascading" Object.assign()?
+            else
+              styleShorthand.objects[0]
+            'object'
+            new Literal ':'
+          )
+        )
+      return [] unless classes.length
       return [@makeCode " className='#{classes.join ' '}'"] unless hasInterpretedClasses
 
       combined = []

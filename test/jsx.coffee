@@ -1004,3 +1004,17 @@ test 'postfix if expression', ->
 #     %a
 #
 #   .leadingDotClass
+
+test '.[] style shorthand (single value)', ->
+  eqJS(
+    '''
+    .[fontSize: '1.2em']
+    '''
+    '''
+    import React from 'react';
+
+    <div style={{
+      fontSize: '1.2em'
+    }}></div>;
+    '''
+  )

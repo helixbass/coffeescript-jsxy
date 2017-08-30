@@ -481,7 +481,7 @@ exports.Lexer = class Lexer
         JSX_CLASS_SHORTHAND
     return unless match = regex.exec(@chunk)
     @token 'JSX_ELEMENT_NAME', 'div', 0, 0 if addImplicitElementName
-    [[], symbol, isInterpreted, klass] = match
+    [[], symbol, isStyle, isInterpreted, klass] = match
     @token 'JSX_CLASS_SHORTHAND_SYMBOL', '.'
     @consumeChunk symbol.length
     if isInterpreted
@@ -493,6 +493,19 @@ exports.Lexer = class Lexer
       open[0]  = 'CALL_START'
       close[0] = 'CALL_END'
       close.origin = ['', 'end of interpreted JSX class', close[2]]
+
+      # Remove leading 'TERMINATOR' (if any).
+      nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
+
+      @tokens.push nested...
+      @consumeChunk index
+    else if isStyle
+      [line, column] = @getLineAndColumnFromChunk 0
+      {tokens: nested, index} =
+        new Lexer().tokenize @chunk, {line, column, untilBalanced: on}
+
+      [..., close] = nested
+      close.origin = ['', 'end of shorthand JSX style', close[2]]
 
       # Remove leading 'TERMINATOR' (if any).
       nested.splice 1, 1 if nested[1]?[0] is 'TERMINATOR'
@@ -1643,8 +1656,8 @@ JSX_ELEMENT =                    /// ^     %([a-zA-Z][a-zA-Z_0-9]*(?:\.[A-Z][a-z
 JSX_ELEMENT_LEADING_WHITESPACE = /// ^ \s* %([a-zA-Z][a-zA-Z_0-9]*(?:\.[A-Z][a-zA-z_0-9]*)*) ///
 JSX_ID_SHORTHAND =                    /// ^     (\#) ([a-zA-Z][a-zA-Z_0-9\-]*) ///
 JSX_ID_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \#) ([a-zA-Z][a-zA-Z_0-9\-]*) ///
-JSX_CLASS_SHORTHAND =                    /// ^     (\.) (?: (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
-JSX_CLASS_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \.) (?: (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
+JSX_CLASS_SHORTHAND =                    /// ^     (\.) (?: (\[) | (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
+JSX_CLASS_SHORTHAND_LEADING_WHITESPACE = /// ^ (\s* \.) (?: (\[) | (\() | ([a-zA-Z][a-zA-Z_0-9\-]*)) ///
 JSX_INLINE_INDICATOR = /// ^ \^ ///
 JSX_ELEMENT_IMMEDIATE_CLOSERS = /// ^ (?: \, | \} | \) | \] | for\s | unless\s | if\s ) ///
 JSX_ELEMENT_INLINE_EQUALS_EXPRESSION = /// ^ (= \s*) ([^\n]+) ///
