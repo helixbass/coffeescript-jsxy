@@ -1011,14 +1011,14 @@ exports.Lexer = class Lexer
         @error 'missing indentation', offset: indent.length
       else # outdent
         @indebt = 0
-        numOutdents = @outdentToken @indent - size, noNewlines, indent.length
+        numOutdents = @outdentToken @indent - size, noNewlines, indent.length, {includesBlankLine}
         return {numOutdents, consumed: indent.length} if returnNumOutdents
 
     indent.length
 
   # Record an outdent token or multiple tokens, if we happen to be moving back
   # inwards past several recorded indents. Sets new @indent value.
-  outdentToken: (moveOut, noNewlines, outdentLength) ->
+  outdentToken: (moveOut, noNewlines, outdentLength, {includesBlankLine} = {}) ->
     decreasedIndent = @indent - moveOut
     numOutdents = 0
     while moveOut > 0
@@ -1042,7 +1042,10 @@ exports.Lexer = class Lexer
     @outdebt -= moveOut if dent
     @tokens.pop() while @value() is ';'
 
-    @token 'TERMINATOR', '\n', outdentLength, 0 unless @tag() is 'TERMINATOR' or noNewlines
+    unless @tag() is 'TERMINATOR' or noNewlines
+      token = @makeToken 'TERMINATOR', '\n', outdentLength, 0
+      token.includesBlankLine = yes if includesBlankLine
+      @tokens.push token
     @indent = decreasedIndent
     @indentLiteral = @indentLiteral[...decreasedIndent]
     numOutdents

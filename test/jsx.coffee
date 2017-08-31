@@ -999,11 +999,55 @@ test 'postfix if expression', ->
 # - no whitespace before element body
 # - outdented end tag, expression }, ...
 # - mismatched start/end tag
-# - handle:
-#   x =
-#     %a
-#
-#   .leadingDotClass
+
+test 'leading dot class after outdent', ->
+  eqJS(
+    '''
+      x =
+        %a
+   
+      .leadingDotClass
+
+      if a
+        b
+
+      .c
+
+      a ->
+        b
+      .c
+
+      a ->
+        b
+
+      .c
+    '''
+    '''
+      var x;
+
+      import React from 'react';
+
+      x = <a></a>;
+
+      <div className='leadingDotClass'></div>;
+
+      if (a) {
+        b;
+      }
+
+      <div className='c'></div>;
+
+      a(function() {
+        return b;
+      }).c;
+
+      a(function() {
+        return b;
+      });
+
+      <div className='c'></div>;
+    '''
+  )
 
 test '.[] style shorthand (single value)', ->
   eqJS(
