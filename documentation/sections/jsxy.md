@@ -4,7 +4,7 @@ CoffeeScript-JSXY adds [Haml](http://haml.info)-inspired whitespace-indented JSX
 
 Here we'll illustrate the new JSXY syntax.
 For other info like installation/background/breaking changes, see
-the `coffeescript-jsxy` [README](https://github.com/helixbass/coffeescript-jsxy/).
+the `coffeescript-jsxy` [README].
 See the CoffeeScript 2 [docs](http://coffeescript.org/v2) for CoffeeScript usage and syntax
 
 ## JSXY
@@ -161,3 +161,11 @@ as a filter.
 ```
 codeFor('jsxy_filters')
 ```
+
+## Get started/questions/issues
+
+Head over to the [Github page][README] for instructions on how
+to use `coffeescript-jsxy` in your project or
+[open an issue](https://github.com/helixbass/coffeescript-jsxy/issues) if you have any questions
+
+[README]: https://github.com/helixbass/coffeescript-jsxy/
