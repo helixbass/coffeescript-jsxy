@@ -32,6 +32,8 @@ To swap out CoffeeScript proper for CoffeeScript-JSXY on an existing project, re
 If you use [Webpack](http://webpack.js.org), use [`coffee-jsxy-loader`](https://github.com/helixbass/coffee-jsxy-loader)
 instead of `coffee-loader`
 
+Since CoffeeScript 2 emits ES6 syntax (classes etc), you'll probably want to pass its output through Babel so eg if you're using Webpack, you could use `loader: ['babel-loader', 'coffee-jsxy-loader']` in your Webpack config and `"presets": ["env", "es2015", "react"]` in your `.babelrc`
+
 ## Getting Started
 
 CoffeeScript-JSXY is built on CoffeeScript 2.
