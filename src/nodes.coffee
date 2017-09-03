@@ -107,6 +107,9 @@ exports.Base = class Base
     @compileCommentFragments o, node, fragments
     fragments
 
+  compileToFragmentsWithoutComments: (o, lvl) ->
+    @compileWithoutComments o, lvl, 'compileToFragments'
+
   # Statements converted into expressions via closure-wrapping share a scope
   # object with their parent closure, to preserve the expected lexical scope.
   compileClosure: (o) ->
@@ -759,10 +762,13 @@ exports.NaNLiteral = class NaNLiteral extends NumberLiteral
 
 exports.StringLiteral = class StringLiteral extends Literal
   compileNode: (o) ->
-    if @jsxAttributeName then [@makeCode @unquote()] else super()
+    if @jsxAttributeName then [@makeCode @unquote(yes, yes)] else super()
 
-  unquote: ->
-    @value[1...-1]
+  unquote: (doubleQuote = no, newLine = no) ->
+    unquoted = @value[1...-1]
+    unquoted = unquoted.replace /\\"/g, '"'  if doubleQuote
+    unquoted = unquoted.replace /\\n/g, '\n' if newLine
+    unquoted
 
 exports.RegexLiteral = class RegexLiteral extends Literal
 
@@ -1672,7 +1678,8 @@ exports.Obj = class Obj extends Base
         propSlices.push prop
     addSlice()
     slices.unshift new Obj unless slices[0] instanceof Obj
-    (new Call new Literal('Object.assign'), slices).compileToFragments o
+    _extends = new Value new Literal utility '_extends', o
+    (new Call _extends, slices).compileToFragments o
       
 exports.JsxAttributesObj = class JsxAttributesObj extends Obj
   compileNode: (o) ->
@@ -2275,8 +2282,9 @@ exports.Assign = class Assign extends Base
         @variable.base.lhs = yes
         return @compileDestructuring o unless @variable.isAssignable()
         # Object destructuring. Can be removed once ES proposal hits Stage 4.
-        return @compileObjectDestruct(o) if @variable.isObject() and @variable.contains (node) ->
+        objDestructAnswer = @compileObjectDestruct(o) if @variable.isObject() and @variable.contains (node) ->
           node instanceof Obj and node.hasSplat()
+        return objDestructAnswer if objDestructAnswer
 
       return @compileSplice       o if @variable.isSplice()
       return @compileConditional  o if @context in ['||=', '&&=', '?=']
@@ -2370,12 +2378,16 @@ exports.Assign = class Assign extends Base
     traverseRest = (properties, source) =>
       restElements = []
       restIndex = undefined
+      source = new Value source unless source.properties?
 
       for prop, index in properties
+        nestedSourceDefault = nestedSource = nestedProperties = null
         setScopeVar prop.unwrap()
         if prop instanceof Assign
           # prop is `k: expr`, we need to check `expr` for nested splats
           if prop.value.isObject?()
+            # prop is `k = {...} `
+            continue unless prop.context is 'object'
             # prop is `k: {...}`
             nestedProperties = prop.value.base.properties
           else if prop.value instanceof Assign and prop.value.variable.isObject()
@@ -2401,13 +2413,19 @@ exports.Assign = class Assign extends Base
 
       restElements
 
-    # Cache the value for reuse with rest elements
-    [@value, valueRef] = @value.cache o
+    # Cache the value for reuse with rest elements.
+    if @value.shouldCache()
+      valueRefTemp = new IdentifierLiteral o.scope.freeVariable 'ref', reserve: false
+    else
+      valueRefTemp = @value.base
 
     # Find all rest elements.
-    restElements = traverseRest @variable.base.properties, valueRef
+    restElements = traverseRest @variable.base.properties, valueRefTemp
+    return no unless restElements and restElements.length > 0
 
+    [@value, valueRef] = @value.cache o
     result = new Block [@]
+
     for restElement in restElements
       value = new Call new Value(new Literal utility 'objectWithoutKeys', o), [restElement.source, restElement.excludeProps]
       result.push new Assign restElement.name, value
@@ -2783,11 +2801,7 @@ exports.Code = class Code extends Base
             # compilation, so that they get output the “real” time this param
             # is compiled.
             paramToAddToScope = if param.value? then param else ref
-            if paramToAddToScope.name?.comments
-              salvagedComments = paramToAddToScope.name.comments
-              delete paramToAddToScope.name.comments
-            o.scope.parameter fragmentsToText paramToAddToScope.compileToFragments o
-            paramToAddToScope.name.comments = salvagedComments if salvagedComments
+            o.scope.parameter fragmentsToText paramToAddToScope.compileToFragmentsWithoutComments o
           params.push ref
         else
           paramsAfterSplat.push param
@@ -2832,7 +2846,14 @@ exports.Code = class Code extends Base
     for param, i in params
       signature.push @makeCode ', ' if i isnt 0
       signature.push @makeCode '...' if haveSplatParam and i is params.length - 1
+      # Compile this parameter, but if any generated variables get created
+      # (e.g. `ref`), shift those into the parent scope since we can’t put a
+      # `var` line inside a function parameter list.
+      scopeVariablesCount = o.scope.variables.length
       signature.push param.compileToFragments(o)...
+      if scopeVariablesCount isnt o.scope.variables.length
+        generatedVariables = o.scope.variables.splice scopeVariablesCount
+        o.scope.parent.variables.push generatedVariables...
     signature.push @makeCode ')'
     # Block comments between `)` and `->`/`=>` get output between `)` and `{`.
     if @funcGlyph?.comments?
@@ -2931,6 +2952,9 @@ exports.Param = class Param extends Base
   compileToFragments: (o) ->
     @name.compileToFragments o, LEVEL_LIST
 
+  compileToFragmentsWithoutComments: (o) ->
+    @name.compileToFragmentsWithoutComments o, LEVEL_LIST
+
   asReference: (o) ->
     return @reference if @reference
     node = @name
@@ -3007,22 +3031,20 @@ exports.Param = class Param extends Base
 # A splat, either as a parameter to a function, an argument to a call,
 # or as part of a destructuring assignment.
 exports.Splat = class Splat extends Base
+  constructor: (name) ->
+    super()
+    @name = if name.compile then name else new Literal name
 
   children: ['name']
 
   isAssignable: ->
     @name.isAssignable() and (not @name.isAtomic or @name.isAtomic())
 
-  constructor: (name) ->
-    super()
-    @name = if name.compile then name else new Literal name
-
   assigns: (name) ->
     @name.assigns name
 
-  compileToFragments: (o) ->
-    [ @makeCode('...')
-      @name.compileToFragments(o)... ]
+  compileNode: (o) ->
+    [@makeCode('...'), @name.compileToFragments(o, LEVEL_OP)...]
 
   unwrap: -> @name
 
@@ -3403,7 +3425,7 @@ exports.Throw = class Throw extends Base
   makeReturn: THIS
 
   compileNode: (o) ->
-    fragments = @expression.compileToFragments o
+    fragments = @expression.compileToFragments o, LEVEL_LIST
     unshiftAfterComments fragments, @makeCode 'throw '
     fragments.unshift @makeCode @tab
     fragments.push @makeCode ';'
@@ -3535,14 +3557,14 @@ exports.StringWithInterpolations = class StringWithInterpolations extends Base
     fragments.push @makeCode '`'
     for element in elements
       if element instanceof StringLiteral
-        value = element.value[1...-1]
+        element.value = element.unquote yes
         # Backticks and `${` inside template literals must be escaped.
-        value = value.replace /(\\*)(`|\$\{)/g, (match, backslashes, toBeEscaped) ->
+        element.value = element.value.replace /(\\*)(`|\$\{)/g, (match, backslashes, toBeEscaped) ->
           if backslashes.length % 2 is 0
             "#{backslashes}\\#{toBeEscaped}"
           else
             match
-        fragments.push @makeCode value
+        fragments.push element.compileToFragments(o)...
       else
         fragments.push @makeCode '$'
         code = element.compileToFragments(o, LEVEL_PAREN)
@@ -3854,6 +3876,19 @@ UTILITIES =
       if (!(instance instanceof Constructor)) {
         throw new Error('Bound instance method accessed before binding');
       }
+    }
+  "
+  _extends: -> "
+    Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+      return target;
     }
   "
 

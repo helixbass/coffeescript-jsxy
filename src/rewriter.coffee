@@ -53,6 +53,7 @@ exports.Rewriter = class Rewriter
     @normalizeLines()
     @tagPostfixConditionals()
     @addImplicitBracesAndParens()
+    @addParensToChainedDoIife()
     @rescueStowawayComments()
     @addLocationDataToGeneratedTokens()
     @fixOutdentLocationData()
@@ -266,7 +267,8 @@ exports.Rewriter = class Rewriter
       # Added support for spread dots on the left side: f ...a
       if (tag in IMPLICIT_FUNC and token.spaced or
           tag is '?' and i > 0 and not tokens[i - 1].spaced) and
-         (nextTag in IMPLICIT_CALL or nextTag is '...' or
+         (nextTag in IMPLICIT_CALL or
+         (nextTag is '...' and @tag(i + 2) in IMPLICIT_CALL and not @findTagsBackwards(i, ['INDEX_START', '['])) or
           nextTag in IMPLICIT_UNSPACED_CALL and
           not nextToken.spaced and not nextToken.newLine)
         tag = token[0] = 'FUNC_EXIST' if tag is '?'
@@ -307,7 +309,7 @@ exports.Rewriter = class Rewriter
           when @tag(i - 2) is '@' then i - 2
           else i - 1
 
-        startsLine = s is 0 or @tag(s - 1) in LINEBREAKS or tokens[s - 1].newLine
+        startsLine = s <= 0 or @tag(s - 1) in LINEBREAKS or tokens[s - 1].newLine
         # Are we just continuing an already declared object?
         if stackTop()
           [stackTag, stackIdx] = stackTop()
@@ -500,6 +502,30 @@ exports.Rewriter = class Rewriter
         last_line:    prevLocationData.last_line
         last_column:  prevLocationData.last_column
       return 1
+
+  # Add parens around a `do` IIFE followed by a chained `.` so that the
+  # chaining applies to the executed function rather than the function
+  # object (see #3736)
+  addParensToChainedDoIife: ->
+    condition = (token, i) ->
+      @tag(i - 1) is 'OUTDENT'
+    action = (token, i) ->
+      return unless token[0] in CALL_CLOSERS
+      @tokens.splice doIndex, 0, generate '(', '(', @tokens[doIndex]
+      @tokens.splice i + 1, 0, generate ')', ')', @tokens[i]
+    doIndex = null
+    @scanTokens (token, i, tokens) ->
+      return 1 unless token[1] is 'do'
+      doIndex = i
+      glyphIndex = i + 1
+      if @tag(i + 1) is 'PARAM_START'
+        glyphIndex = null
+        @detectEnd i + 1,
+          (token, i) -> @tag(i - 1) is 'PARAM_END'
+          (token, i) -> glyphIndex = i
+      return 1 unless glyphIndex? and @tag(glyphIndex) in ['->', '=>'] and @tag(glyphIndex + 1) is 'INDENT'
+      @detectEnd glyphIndex + 1, condition, action
+      return 2
 
   # Because our grammar is LALR(1), it can’t handle some single-line
   # expressions that lack ending delimiters. The **Rewriter** adds the implicit

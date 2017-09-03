@@ -137,7 +137,7 @@ exports.Lexer = class Lexer
       return id.length
     if id is 'do' and regExSuper = /^(\s*super)(?!\(\))/.exec @chunk[3...]
       @token 'SUPER', 'super'
-      @token 'CALL_START', '('      
+      @token 'CALL_START', '('
       @token 'CALL_END', ')'
       [input, sup] = regExSuper
       return sup.length + 3
@@ -1040,7 +1040,7 @@ exports.Lexer = class Lexer
         numOutdents++
         moveOut -= dent
     @outdebt -= moveOut if dent
-    @tokens.pop() while @value() is ';'
+    @suppressSemicolons()
 
     unless @tag() is 'TERMINATOR' or noNewlines
       token = @makeToken 'TERMINATOR', '\n', outdentLength, 0
@@ -1061,7 +1061,7 @@ exports.Lexer = class Lexer
 
   # Generate a newline token. Consecutive newlines get merged together.
   newlineToken: (offset, opts = {}) ->
-    @tokens.pop() while @value() is ';'
+    @suppressSemicolons()
     unless @tag() is 'TERMINATOR'
       token = @makeToken 'TERMINATOR', '\n', offset, 0
       token.includesBlankLine = yes if opts.includesBlankLine
@@ -1118,9 +1118,10 @@ exports.Lexer = class Lexer
       @exportSpecifierList = no
 
     if value is ';'
+      @error 'unexpected ;' if prev?[0] in ['=', UNFINISHED...]
       @seenFor = @seenImport = @seenExport = no
       tag = 'TERMINATOR'
-    else if value is '*' and prev[0] is 'EXPORT'
+    else if value is '*' and prev?[0] is 'EXPORT'
       tag = 'EXPORT_ALL'
     else if value is '|' and @inJsxExpression
       tag = 'JSX_FILTER'
@@ -1133,11 +1134,12 @@ exports.Lexer = class Lexer
     else if value in UNARY_MATH      then tag = 'UNARY_MATH'
     else if value in SHIFT           then tag = 'SHIFT'
     else if value is '?' and prev?.spaced then tag = 'BIN?'
-    else if prev and not prev.spaced
-      if value is '(' and prev[0] in CALLABLE
+    else if prev
+      if value is '(' and not prev.spaced and prev[0] in CALLABLE
         prev[0] = 'FUNC_EXIST' if prev[0] is '?'
         tag = 'CALL_START'
-      else if value is '[' and prev[0] in INDEXABLE
+      else if value is '[' and ((prev[0] in INDEXABLE and not prev.spaced) or
+         (prev[0] is '::')) # `.prototype` can’t be a method you can call.
         tag = 'INDEX_START'
         switch prev[0]
           when '?'  then prev[0] = 'INDEX_SOAK'
@@ -1277,8 +1279,20 @@ exports.Lexer = class Lexer
       [tag, value] = token
       switch tag
         when 'TOKENS'
-          # Optimize out empty interpolations (an empty pair of parentheses).
-          continue if value.length is 2
+          if value.length is 2
+            # Optimize out empty interpolations (an empty pair of parentheses).
+            continue unless value[0].comments or value[1].comments
+            # There are comments (and nothing else) in this interpolation.
+            # This is an interpolated string and for whatever
+            # reason `` `a${/*test*/}b` `` is invalid JS. So compile to
+            # `` `a${/*test*/''}b` `` instead.
+            placeholderToken = @makeToken 'STRING', "''"
+            # Use the same location data as the first parenthesis.
+            placeholderToken[2] = value[0][2]
+            for val in value when val.comments
+              placeholderToken.comments ?= []
+              placeholderToken.comments.push val.comments...
+            value.splice 1, 0, placeholderToken
           # Push all the tokens in the fake `'TOKENS'` token. These already have
           # sane location data.
           locationToken = value[0]
@@ -1521,6 +1535,11 @@ exports.Lexer = class Lexer
       when ps        then '\\u2029'
       when other     then (if options.double then "\\#{other}" else other)
     "#{options.delimiter}#{body}#{options.delimiter}"
+
+  suppressSemicolons: ->
+    while @value() is ';'
+      @tokens.pop()
+      @error 'unexpected ;' if @prev()?[0] in ['=', UNFINISHED...]
 
   # Throws an error at either a given offset from the current chunk or at the
   # location of a token (`token[2]`).

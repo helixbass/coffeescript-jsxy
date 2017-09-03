@@ -721,6 +721,10 @@ test "Empty lines between comments are preserved", ->
     3;
   }'''
 
+test "Block comment in an interpolated string", ->
+  eqJS '"a#{### Comment ###}b"', "`a${/* Comment */''}b`;"
+  eqJS '"a#{### 1 ###}b#{### 2 ###}c"', "`a${/* 1 */''}b${/* 2 */''}c`;"
+
 test "Line comment in an interpolated string", ->
   eqJS '''
   "a#{# Comment

@@ -433,11 +433,15 @@ task 'doc:source:watch', 'watch and continually rebuild the annotated source doc
 
 
 task 'release', 'build and test the CoffeeScript source, and build the documentation', ->
-  invoke 'build:full'
-  invoke 'build:browser:full'
-  invoke 'doc:site'
-  invoke 'doc:test'
-  invoke 'doc:source'
+  execSync '''
+    cake build:full
+    cake build:browser
+    cake test:browser
+    cake test:integrations
+    cake doc:site
+    cake doc:test
+    cake doc:source''', stdio: 'inherit'
+
 
 task 'bench', 'quick benchmark of compilation time', ->
   {Rewriter} = require './lib/coffeescript/rewriter'
@@ -465,7 +469,6 @@ task 'bench', 'quick benchmark of compilation time', ->
 runTests = (CoffeeScript, opts = {}) ->
   {justTestFile} = opts
   CoffeeScript.register() unless global.testingBrowser
-  startTime = Date.now()
 
   # These are attached to `global` so that they’re accessible from within
   # `test/async.coffee`, which has an async-capable version of
@@ -485,18 +488,35 @@ runTests = (CoffeeScript, opts = {}) ->
   global.yellow = yellow
   global.reset  = reset
 
+  asyncTests = []
+  onFail = (description, fn, err) ->
+    failures.push
+      filename: global.currentFile
+      error: err
+      description: description
+      source: fn.toString() if fn.toString?
+
   # Our test helper function for delimiting different test cases.
   global.test = (description, fn) ->
     try
       fn.test = {description, currentFile}
-      fn.call(fn)
-      ++passedTests
-    catch e
-      failures.push
-        filename: currentFile
-        error: e
-        description: description if description?
-        source: fn.toString() if fn.toString?
+      result = fn.call(fn)
+      if result instanceof Promise # An async test.
+        asyncTests.push result
+        result.then ->
+          passedTests++
+        .catch (err) ->
+          onFail description, fn, err
+      else
+        passedTests++
+    catch err
+      onFail description, fn, err
+
+  global.supportsAsync = try
+      new Function('async () => {}')()
+      yes
+    catch
+      no
 
   helpers.extend global, require './test/support/helpers'
 
@@ -517,7 +537,10 @@ runTests = (CoffeeScript, opts = {}) ->
 
   # Run every test in the `test` folder, recording failures.
   files = fs.readdirSync 'test'
+  unless global.supportsAsync # Except for async tests, if async isn’t supported.
+    files = files.filter (filename) -> filename isnt 'async.coffee'
 
+  startTime = Date.now()
   for file in files when helpers.isCoffee(file) and (not justTestFile or "#{ justTestFile }.coffee" is file)
     literate = helpers.isLiterate file
     currentFile = filename = path.join 'test', file
@@ -526,24 +549,23 @@ runTests = (CoffeeScript, opts = {}) ->
       CoffeeScript.run code.toString(), {filename, literate}
     catch error
       failures.push {filename, error}
-  return !failures.length
+
+  Promise.all(asyncTests).then ->
+    Promise.reject() if failures.length isnt 0
 
 
 task 'test', 'run the CoffeeScript language test suite', ->
-  testResults = runTests CoffeeScript
-  process.exit 1 unless testResults
+  runTests(CoffeeScript).catch -> process.exit 1
 task 'test:jsx', 'run the CoffeeScript language test suite', ->
-  testResults = runTests CoffeeScript, justTestFile: 'jsx'
-  process.exit 1 unless testResults
-
+  runTests(CoffeeScript, justTestFile: 'jsx').catch -> process.exit 1
 
 task 'test:browser', 'run the test suite against the merged browser script', ->
   source = fs.readFileSync "docs/v#{majorVersion}/browser-compiler/coffeescript.js", 'utf-8'
   result = {}
   global.testingBrowser = yes
   (-> eval source).call result
-  testResults = runTests result.CoffeeScript
-  process.exit 1 unless testResults
+  runTests(CoffeeScript).catch -> process.exit 1
+
 
 task 'test:integrations', 'test the module integrated with other libraries and environments', ->
   # Tools like Webpack and Browserify generate builds intended for a browser
