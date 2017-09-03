@@ -1301,7 +1301,9 @@ exports.JsxElement = class JsxElement extends Base
           new Assign(
             new Value new IdentifierLiteral('style')
             if styleShorthand.objects.length > 1
-              styleShorthand # TODO: how to handle this for React (ie non-React-Native)? translate to "cascading" Object.assign()?
+              _extends = new Value new Literal utility '_extends', o
+              new Call _extends, [new Obj, styleShorthand.objects...]
+              # styleShorthand TODO: detect/allow to specify React native and return list (ie styleShorthand)
             else
               styleShorthand.objects[0]
             'object'
