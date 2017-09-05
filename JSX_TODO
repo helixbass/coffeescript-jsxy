@@ -23,7 +23,6 @@
       %def
 - allow haml-style self-closing tag syntax? eg %hr/
 - handle inline else eg if x then %a else %b
-- shorthand style syntax .[]?
 - handle chain after function glyph eg:
   x ->
   .y

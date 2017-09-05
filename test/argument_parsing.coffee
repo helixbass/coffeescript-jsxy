@@ -125,6 +125,7 @@ If called without options, `coffee` will run your script.
   -h, --help         display this help message
   -i, --interactive  run an interactive CoffeeScript REPL
   -j, --join         concatenate the source CoffeeScript before compiling
+      --jsx-frameworkspecify framework for JSX - react (default), reactNative or vue
   -m, --map          generate source map and save as .js.map files
   -M, --inline-map   generate source map and include it directly in output
   -n, --nodes        print out the parse tree that the parser produces

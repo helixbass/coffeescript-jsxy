@@ -556,8 +556,7 @@ exports.Block = class Block extends Base
       return unless child instanceof JsxElement
       if child.shorthands.classes.some((klass) -> Array.isArray klass)
         addedDynamicClassNamesImport = yes
-        jsxImports.push
-          importDefault: 'classNames', from: 'classnames'
+        jsxImports.push o.jsxFrameworkOptions.dynamicClassNamesFunction if o.jsxFrameworkOptions.dynamicClassNamesFunction?.from?
 
     explicitImports = []
     @traverseChildren false, (child) =>
@@ -1293,6 +1292,7 @@ exports.JsxElement = class JsxElement extends Base
       {classes} = @shorthands
       return [] unless classes.length
       hasInterpretedClasses = classes.some (klass) -> Array.isArray klass
+      {classNameAttribute = 'className', dynamicClassNamesFunction, styleArray} = o.jsxFrameworkOptions
       styleShorthand = do ->
         return klass for klass in classes when klass instanceof Arr
       if styleShorthand?
@@ -1301,9 +1301,11 @@ exports.JsxElement = class JsxElement extends Base
           new Assign(
             new Value new IdentifierLiteral('style')
             if styleShorthand.objects.length > 1
-              _extends = new Value new Literal utility '_extends', o
-              new Call _extends, [new Obj, styleShorthand.objects...]
-              # styleShorthand TODO: detect/allow to specify React native and return list (ie styleShorthand)
+              if styleArray is 'merge'
+                _extends = new Value new Literal utility '_extends', o
+                new Call _extends, [new Obj, styleShorthand.objects...]
+              else
+                styleShorthand
             else
               styleShorthand.objects[0]
             'object'
@@ -1311,7 +1313,7 @@ exports.JsxElement = class JsxElement extends Base
           )
         )
       return [] unless classes.length
-      return [@makeCode " className='#{classes.join ' '}'"] unless hasInterpretedClasses
+      return [@makeCode " #{classNameAttribute}='#{classes.join ' '}'"] unless hasInterpretedClasses
 
       combined = []
       for klass in classes
@@ -1321,11 +1323,14 @@ exports.JsxElement = class JsxElement extends Base
           combined.push new Value new StringLiteral "'#{klass}'"
       (@objAttributes ?= new JsxAttributesObj).properties.push(
         new Assign(
-          new Value new IdentifierLiteral('className')
-          new Call(
-            new Value new IdentifierLiteral('classNames')
-            combined
-          )
+          new Value new IdentifierLiteral(classNameAttribute)
+          if dynamicClassNamesFunction is 'array'
+            new Arr combined
+          else
+            new Call(
+              new Value new IdentifierLiteral(dynamicClassNamesFunction.importDefault)
+              combined
+            )
           'object'
           new Literal ':'
         )

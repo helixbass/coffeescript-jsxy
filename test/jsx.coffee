@@ -1078,3 +1078,29 @@ test '.[] style shorthand (multiple values, React)', ->
     })}></div>;
     '''
   )
+
+test 'Vue auto-imports/dynamic classnames', ->
+  eqJS(
+    '.(a, b).[c, d]'
+    '''
+    <div style={[c, d]} class={[a, b]}></div>;
+    '''
+    null
+    options:
+      jsxFramework: 'vue'
+  )
+
+test 'React Native auto-imports/dynamic classnames', ->
+  eqJS(
+    '.(a, b).[c, d]'
+    '''
+    import classNames from 'classnames';
+
+    import React from 'react';
+
+    <div style={[c, d]} className={classNames(a, b)}></div>;
+    '''
+    null
+    options:
+      jsxFramework: 'reactNative'
+  )

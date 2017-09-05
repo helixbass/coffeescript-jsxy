@@ -94,11 +94,28 @@ exports.compile = compile = withPrettyErrors (code, options) ->
         options.bare = yes
         break
 
+  jsxFrameworks =
+    react:
+      dynamicClassNamesFunction:
+        importDefault: 'classNames', from: 'classnames'
+      jsxImport:
+        importDefault: 'React', from: 'react'
+      styleArray: 'merge'
+    reactNative:
+      dynamicClassNamesFunction:
+        importDefault: 'classNames', from: 'classnames'
+      jsxImport:
+        importDefault: 'React', from: 'react'
+    vue:
+      dynamicClassNamesFunction: 'array'
+      classNameAttribute: 'class'
+
+  options.jsxFramework ?= 'react'
+  options.jsxFrameworkOptions = jsxFrameworks[options.jsxFramework] # TODO: error unless exists
   for token in tokens
     if token[0] in ['JSX_START_TAG_START', 'JSX_ELEMENT_NAME']
       options.containsJsx = yes
-      (options.jsxImports ?= []).push
-        importDefault: 'React', from: 'react'
+      (options.jsxImports ?= []).push options.jsxFrameworkOptions.jsxImport if options.jsxFrameworkOptions.jsxImport?
       break
 
   fragments = parser.parse(tokens).compileToFragments options
